@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" fill="#131E19"/>
+  <rect x="16" y="16" width="160" height="160" fill="none" stroke="#E0A33F" stroke-width="3"/>
+  <text x="96" y="86" text-anchor="middle" font-family="Songti SC, SimSun, serif" font-size="58" font-weight="700" fill="#EDE8DC">今天</text>
+  <text x="96" y="148" text-anchor="middle" font-family="Songti SC, SimSun, serif" font-size="58" font-weight="700" fill="#E0A33F">吃啥</text>
+</svg>

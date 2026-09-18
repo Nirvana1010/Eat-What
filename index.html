@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>今天吃什么</title>
+<meta name="theme-color" content="#131E19">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>今天吃什么</h1>
+    <div class="date" id="today"></div>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-view="draw">抽菜</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="table">配一桌</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="lib">菜库</button>
+  </div>
+
+  <!-- ===== 抽菜 ===== -->
+  <section class="view on" id="v-draw">
+    <div class="filterbar">
+      <div class="filtersum" id="fsum">不限</div>
+      <button class="btn sm" id="ftoggle">筛选</button>
+    </div>
+    <div class="panel" id="fpanel" hidden></div>
+
+    <div class="board" id="board">
+      <p class="dish placeholder">按下面的按钮，抽一道菜</p>
+    </div>
+
+    <div class="row">
+      <button class="btn" id="btnDraw">抽一道</button>
+      <button class="btn primary" id="btnEat" disabled>就吃它</button>
+    </div>
+
+    <div class="recent">
+      <p class="secthead">最近吃过</p>
+      <div id="logList"></div>
+    </div>
+  </section>
+
+  <!-- ===== 配一桌 ===== -->
+  <section class="view" id="v-table">
+    <div class="filterbar">
+      <div class="filtersum">按上面「抽菜」里的筛选条件配</div>
+      <select class="field" id="tableSize" style="flex:0 0 auto">
+        <option value="2">两菜</option>
+        <option value="3" selected>三菜一汤</option>
+        <option value="4">四菜一汤</option>
+      </select>
+    </div>
+    <div id="tableOut"><p class="empty">配一桌搭配好的菜，荤素汤各来一道。</p></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="btnTable">配一桌</button>
+      <button class="btn primary" id="btnTableEat" disabled>就这桌</button>
+    </div>
+  </section>
+
+  <!-- ===== 菜库 ===== -->
+  <section class="view" id="v-lib">
+    <div class="libhead">
+      <input class="field" id="q" placeholder="搜菜名" autocomplete="off">
+      <button class="btn sm" id="btnAddToggle">加菜</button>
+    </div>
+    <div class="panel" id="addPanel" hidden></div>
+    <div id="libList"></div>
+
+    <div class="backup">
+      <p class="secthead">备份与迁移</p>
+      <p class="hint">菜和图都存在这台设备的浏览器里。换设备或清缓存前，先导出一份。</p>
+      <div class="row" style="margin-top:10px">
+        <button class="btn sm" id="btnExport">导出备份</button>
+        <button class="btn sm" id="btnImport">导入备份</button>
+        <button class="btn sm" id="btnReset">恢复初始菜库</button>
+      </div>
+      <input type="file" id="fileImport" accept="application/json" hidden>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>
