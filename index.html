@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>今天吃什么</title>
-<meta name="theme-color" content="#131E19">
+<meta name="theme-color" content="#121C18">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,18 +27,19 @@
   <section class="view on" id="v-draw">
     <div class="filterbar">
       <div class="filtersum" id="fsum">不限</div>
-      <button class="btn sm" id="ftoggle">筛选</button>
+      <button class="btn sm" id="ftoggle">筛选<span class="badge" id="fcount" hidden></span></button>
     </div>
     <div class="panel" id="fpanel" hidden></div>
 
     <div class="board blank" id="board">
-      <div class="pad"><p class="dish placeholder">正在读菜库…</p></div>
+      <p class="dish placeholder">正在读菜库…</p>
     </div>
 
     <div class="row">
       <button class="btn" id="btnDraw">抽一道</button>
       <button class="btn primary" id="btnEat" disabled>就吃它</button>
     </div>
+    <p class="poolline" id="poolLine"></p>
 
     <div class="recent">
       <p class="secthead">最近吃过</p>
@@ -54,13 +55,13 @@
       <input class="field" id="q" placeholder="搜菜名" autocomplete="off">
       <button class="btn sm" id="btnAddToggle">加菜</button>
     </div>
-    <div class="panel" id="addPanel" hidden></div>
+    <div class="catnav" id="catnav"></div>
     <div id="libList"></div>
 
     <div class="backup">
       <p class="secthead">数据</p>
       <p class="hint" id="cloudNote">菜和图片都存在云端，手机、电脑打开同一个网址就是同一份。</p>
-      <div class="row" style="margin-top:10px;flex-wrap:wrap">
+      <div class="row" style="margin-top:12px;flex-wrap:wrap">
         <button class="btn sm" id="btnExport">导出备份</button>
         <button class="btn sm" id="btnSeed" hidden>导入初始 97 道菜</button>
       </div>
@@ -68,6 +69,7 @@
   </section>
 </div>
 
+<div id="sheet" hidden></div>
 <div class="toast" id="toast" hidden></div>
 
 <script src="config.js"></script>

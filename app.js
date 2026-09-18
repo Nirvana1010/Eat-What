@@ -215,10 +215,14 @@ function renderFilters() {
     + grp('重样', numChips('avoid', [[0,'不避开'],[3,'3 天内不重'],[7,'7 天内不重'],[14,'14 天内不重']]))
     + grp('收藏', `<button class="chip" data-k="favOnly" data-v="1" aria-pressed="${F.favOnly}">只抽收藏的</button>`);
 
-  const sum = [F.cat, F.taste, F.method];
+  const sum = [F.cat, F.taste, F.method].filter(Boolean);
   if (F.maxMin) sum.push(F.maxMin + ' 分钟内');
-  if (F.favOnly) sum.push('收藏');
-  $('fsum').textContent = sum.filter(Boolean).join(' · ') || '不限';
+  if (F.favOnly) sum.push('只抽收藏');
+  $('fsum').textContent = sum.length ? sum.join(' · ') : '全部菜里随便抽';
+
+  const badge = $('fcount');
+  badge.hidden = !sum.length;
+  badge.textContent = sum.length;
 }
 
 $('ftoggle').onclick = function () {
@@ -257,34 +261,33 @@ function pool(useAvoid) {
 
 /* ========== 抽菜 ========== */
 const dishTags = d => [d.c, d.k, d.t, d.min + ' 分钟'];
+const tagHtml = d => `<div class="tags">${dishTags(d).map(x => `<span class="tag">${esc(x)}</span>`).join('')}</div>`;
 
 function renderBoard() {
   const b = $('board');
   const d = state.current;
+
   if (!d) {
     b.className = 'board blank';
-    b.innerHTML = `<div class="pad"><p class="dish placeholder">${state.ready ? '按下面的按钮，抽一道菜' : '正在读菜库…'}</p></div>`;
-  } else {
+    b.innerHTML = `<p class="dish placeholder">${state.ready ? '按下面的按钮，抽一道菜' : '正在读菜库…'}</p>`;
+  } else if (d.img) {
     b.className = 'board';
-    b.innerHTML =
-      (d.img ? `<img class="photo reveal" src="${esc(d.img)}" alt="${esc(d.n)}" onerror="this.remove()">` : '')
-      + `<div class="pad"><p class="dish reveal">${esc(d.n)}</p>`
-      + `<div class="tags reveal">${dishTags(d).map(x => `<span class="tag">${esc(x)}</span>`).join('')}</div>`
-      + (d.note ? `<div class="pool">${esc(d.note)}</div>` : '')
-      + '</div>';
+    b.innerHTML = `<img class="photo" src="${esc(d.img)}" alt="${esc(d.n)}"
+                        onerror="this.closest('.board').classList.add('noimg');this.remove()">
+      <div class="overlay reveal">
+        <p class="dish">${esc(d.n)}</p>${tagHtml(d)}
+        ${d.note ? `<p class="note">${esc(d.note)}</p>` : ''}
+      </div>`;
+  } else {
+    b.className = 'board blank';
+    b.innerHTML = `<div class="reveal"><p class="dish">${esc(d.n)}</p>${tagHtml(d)}
+      ${d.note ? `<p class="note">${esc(d.note)}</p>` : ''}</div>`;
   }
   renderPoolLine();
 }
 
 function renderPoolLine() {
-  const b = $('board');
-  let el = b.querySelector('.pool.count');
-  if (!el) {
-    el = document.createElement('div');
-    el.className = 'pool count';
-    (b.querySelector('.pad') || b).appendChild(el);
-  }
-  el.textContent = state.ready ? `符合条件的有 ${pool(true).length} 道` : '';
+  $('poolLine').textContent = state.ready ? `符合条件的有 ${pool(true).length} 道` : '';
 }
 
 $('btnDraw').onclick = () => {
@@ -293,8 +296,9 @@ $('btnDraw').onclick = () => {
   if (!list.length) {
     state.current = null;
     $('board').className = 'board blank';
-    $('board').innerHTML = '<div class="pad"><p class="dish placeholder">这些条件下没有菜<br>放宽筛选，或去菜库加几道</p></div>';
+    $('board').innerHTML = '<p class="dish placeholder">这些条件下没有菜<br>放宽筛选，或去菜库加几道</p>';
     $('btnEat').disabled = true;
+    renderPoolLine();
     return;
   }
   let pick = randOf(list);
@@ -319,207 +323,252 @@ $('btnEat').onclick = async function () {
 
 function renderLog() {
   const box = $('logList');
-  const last = state.log.slice(-14).reverse();
-  box.innerHTML = last.length
-    ? last.map(e => `<div class="logline"><span>${esc(cnDate(e.d))}</span><div>${esc(e.n || '')}</div></div>`).join('')
-    : '<p class="empty">还没有记录。定下来的菜按「就吃它」，以后就能避开重样。</p>';
+  const last = state.log.slice(-12).reverse();
+  if (!last.length) {
+    box.innerHTML = '<p class="empty">还没有记录。定下来的菜按「就吃它」，以后就能避开重样。</p>';
+    return;
+  }
+  box.innerHTML = last.map(e => {
+    const d = findDish(e.id);
+    const t = d?.img
+      ? `<img class="lt" src="${esc(d.img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`
+      : '<div class="lt"></div>';
+    return `<div class="logline"><span class="when">${esc(cnDate(e.d))}</span>${t}<div class="ln">${esc(e.n || '')}</div></div>`;
+  }).join('');
 }
 
 /* ========== 菜库 ========== */
-let openId = null;
+let libCat = '';
 const findDish = id => state.dishes.find(d => d.id === id);
 
-const thumb = d => d.img
-  ? `<img class="thumb" src="${esc(d.img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`
-  : '<div class="thumb none">无图</div>';
+function renderCatNav() {
+  const counts = {};
+  for (const d of state.dishes) counts[d.c] = (counts[d.c] || 0) + 1;
+  const cats = CATS.filter(c => counts[c]);
+  const other = state.dishes.filter(d => !CATS.includes(d.c)).length;
+  $('catnav').innerHTML =
+    `<button class="chip" data-c="" aria-pressed="${libCat ? 'false' : 'true'}">全部 ${state.dishes.length}</button>`
+    + cats.map(c => `<button class="chip" data-c="${c}" aria-pressed="${libCat === c ? 'true' : 'false'}">${c} ${counts[c]}</button>`).join('')
+    + (other ? `<button class="chip" data-c="其他" aria-pressed="${libCat === '其他' ? 'true' : 'false'}">其他 ${other}</button>` : '');
+}
+
+$('catnav').addEventListener('click', e => {
+  const b = e.target.closest('.chip');
+  if (!b) return;
+  libCat = b.dataset.c;
+  renderCatNav(); renderLib();
+});
+
+function tile(d) {
+  const meta = [d.k, d.t, d.min + ' 分钟'].join(' · ');
+  const marks = (d.fav ? '<span class="heart">♥</span>' : '')
+              + (d.on ? '' : '<span class="resting">歇着</span>');
+  if (d.img) {
+    return `<button class="tile${d.on ? '' : ' off'}" data-id="${d.id}">
+      <img src="${esc(d.img)}" alt="" loading="lazy"
+           onerror="this.closest('.tile').classList.add('nophoto');this.remove()">
+      ${marks}<div class="cap"><div class="cn">${esc(d.n)}</div><div class="cm">${esc(meta)}</div></div>
+    </button>`;
+  }
+  return `<button class="tile nophoto${d.on ? '' : ' off'}" data-id="${d.id}">
+    ${marks}<div class="cn">${esc(d.n)}</div><div class="cm">${esc(meta)}</div>
+  </button>`;
+}
 
 function renderLib() {
   const box = $('libList');
   if (!state.ready && !state.dishes.length) { box.innerHTML = '<p class="empty">正在读菜库…</p>'; return; }
+  renderCatNav();
 
   const q = $('q').value.trim();
-  const list = state.dishes.filter(d => !q || d.n.includes(q));
+  const list = state.dishes.filter(d =>
+    (!q || d.n.includes(q)) &&
+    (!libCat || (libCat === '其他' ? !CATS.includes(d.c) : d.c === libCat)));
+
   if (!list.length) {
     box.innerHTML = state.dishes.length
-      ? '<p class="empty">没找到。用上面的「加菜」把它记下来。</p>'
+      ? '<p class="empty">这儿没有菜。<br>换个分类，或者用右上角「加菜」记一道。</p>'
       : '<p class="empty">菜库还是空的。<br>登录后点下面的「导入初始 97 道菜」，或者直接「加菜」。</p>';
     return;
   }
-
-  let html = '';
-  for (const c of CATS.concat(['其他'])) {
-    const g = list.filter(d => c === '其他' ? !CATS.includes(d.c) : d.c === c);
-    if (!g.length) continue;
-    html += `<div class="catrule">${esc(c)} <span style="letter-spacing:0">(${g.length})</span></div>`;
-    for (const d of g) {
-      html += `<div class="item${d.on ? '' : ' off'}" data-id="${d.id}">
-        <div class="itemtop">
-          ${thumb(d)}
-          <div style="flex:1;min-width:0">
-            <div class="itemname">${esc(d.n)}</div>
-            <div class="meta">${esc([d.k, d.t, d.min + ' 分钟'].join(' · '))}</div>
-          </div>
-          <button class="icon${d.fav ? ' on' : ''}" data-act="fav" aria-label="收藏">${d.fav ? '♥' : '♡'}</button>
-          <button class="icon" data-act="edit" aria-label="编辑">···</button>
-        </div>
-        ${openId === d.id ? editor(d) : ''}
-      </div>`;
-    }
-  }
-  box.innerHTML = html;
-}
-
-function selField(name, list, cur) {
-  return `<select class="field" data-f="${name}">${
-    list.map(v => `<option${v === cur ? ' selected' : ''}>${v}</option>`).join('')}</select>`;
-}
-
-function editor(d) {
-  return `<div class="editor">
-    <div class="imgbox">
-      ${d.img ? `<img src="${esc(d.img)}" alt="">` : '<div class="thumb none" style="width:96px;height:96px">无图</div>'}
-      <div class="imgside">
-        <label class="btn sm filelabel">上传图片<input type="file" accept="image/*" data-act="pick" hidden></label>
-        <input class="field" data-f="img" value="${esc(d.img)}" placeholder="或粘贴一个图片网址">
-        ${d.img ? '<button class="btn sm danger" data-act="rmimg">去掉图片</button>' : ''}
-      </div>
-    </div>
-    <input class="field" data-f="n" value="${esc(d.n)}" placeholder="菜名">
-    <div class="editrow">
-      ${selField('c', CATS, d.c)}${selField('k', METHODS, d.k)}${selField('t', TASTES, d.t)}
-      <input class="field" data-f="min" type="number" inputmode="numeric" min="1" value="${d.min}" style="flex:0 0 84px">
-    </div>
-    <textarea class="field" data-f="note" placeholder="做法要点、配菜、链接…">${esc(d.note)}</textarea>
-    <div class="editrow">
-      <button class="btn sm" data-act="toggle">${d.on ? '暂时不抽' : '重新启用'}</button>
-      <button class="btn sm danger" data-act="del">删掉这道菜</button>
-    </div>
-  </div>`;
+  box.innerHTML = `<div class="grid">${list.map(tile).join('')}</div>`;
 }
 
 $('q').addEventListener('input', renderLib);
+$('libList').addEventListener('click', e => {
+  const t = e.target.closest('.tile');
+  if (t) openSheet(findDish(t.dataset.id));
+});
 
-$('libList').addEventListener('click', async e => {
-  const btn = e.target.closest('[data-act]');
-  if (!btn || btn.dataset.act === 'pick') return;
-  const d = findDish(e.target.closest('.item').dataset.id);
+/* ========== 底部抽屉：看 / 改 / 加 ========== */
+let pendingFile = null;
+let draft = null;
+
+const selField = (name, list, cur) => `<select class="field" data-f="${name}">${
+  list.map(v => `<option${v === cur ? ' selected' : ''}>${v}</option>`).join('')}</select>`;
+
+function sheetBody(d, isNew) {
+  const pv = d.img
+    ? `<img class="pv" src="${esc(d.img)}" alt="">`
+    : '<div class="pv none">还没图</div>';
+  return `<div class="scrim" data-act="close"></div>
+    <div class="sheet" role="dialog" aria-modal="true">
+      <div class="grab"></div>
+      <div class="sheethead">
+        <h2>${isNew ? '加一道菜' : esc(d.n)}</h2>
+        ${isNew ? '' : `<button class="icon${d.fav ? ' on' : ''}" data-act="fav" aria-label="收藏">${d.fav ? '♥' : '♡'}</button>`}
+        <button class="icon" data-act="close" aria-label="关闭">✕</button>
+      </div>
+      <div class="editor">
+        <div class="imgbox">
+          ${pv}
+          <div class="imgside">
+            <label class="filelabel">${d.img ? '换张图片' : '上传图片'}<input type="file" accept="image/*" data-act="pick" hidden></label>
+            <input class="field" data-f="img" value="${esc(d.img)}" placeholder="或粘贴图片网址">
+            ${d.img ? '<button class="btn sm danger" data-act="rmimg">去掉图片</button>' : ''}
+          </div>
+        </div>
+        <input class="field" data-f="n" value="${esc(d.n)}" placeholder="菜名">
+        <div class="editrow">
+          ${selField('c', CATS, d.c)}${selField('k', METHODS, d.k)}${selField('t', TASTES, d.t)}
+          <input class="field" data-f="min" type="number" inputmode="numeric" min="1" value="${d.min}" style="flex:0 0 88px">
+        </div>
+        <textarea class="field" data-f="note" placeholder="做法要点、配菜、链接…">${esc(d.note)}</textarea>
+        ${isNew
+          ? '<button class="btn primary wide" data-act="create">加进菜库</button>'
+          : `<div class="editrow" style="margin-top:4px">
+               <button class="btn sm" data-act="toggle">${d.on ? '暂时不抽' : '重新启用'}</button>
+               <button class="btn sm danger" data-act="del">删掉这道菜</button>
+               <button class="btn sm" data-act="close" style="margin-left:auto">完成</button>
+             </div>`}
+      </div>
+    </div>`;
+}
+
+function openSheet(d, isNew = false) {
   if (!d) return;
-  const act = btn.dataset.act;
+  draft = isNew ? d : null;
+  pendingFile = null;
+  const el = $('sheet');
+  el.innerHTML = sheetBody(d, isNew);
+  el.hidden = false;
+  el.dataset.id = d.id;
+  el.dataset.new = isNew ? '1' : '';
+  document.body.style.overflow = 'hidden';
+}
 
-  if (act === 'edit') { openId = openId === d.id ? null : d.id; renderLib(); return; }
+function closeSheet() {
+  $('sheet').hidden = true;
+  $('sheet').innerHTML = '';
+  draft = null; pendingFile = null;
+  document.body.style.overflow = '';
+}
+
+const sheetDish = () => $('sheet').dataset.new ? draft : findDish($('sheet').dataset.id);
+
+function refreshSheet() {
+  const d = sheetDish();
+  const isNew = !!$('sheet').dataset.new;
+  if (!d) return closeSheet();
+  $('sheet').innerHTML = sheetBody(d, isNew);
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('sheet').hidden) closeSheet(); });
+
+$('sheet').addEventListener('click', async e => {
+  const b = e.target.closest('[data-act]');
+  if (!b || b.dataset.act === 'pick') return;
+  const act = b.dataset.act;
+  if (act === 'close') return closeSheet();
+
+  const d = sheetDish();
+  if (!d) return closeSheet();
   if (!canEdit()) { toast('先在菜库页登录才能改'); return; }
 
-  if (act === 'fav')    { d.fav = !d.fav; await saveDish(d); renderLib(); }
-  if (act === 'toggle') { d.on = !d.on;  await saveDish(d); renderLib(); renderPoolLine(); }
+  if (act === 'create') { await createDish(d); return; }
+
+  if (act === 'fav')    { d.fav = !d.fav; await saveDish(d); refreshSheet(); renderLib(); }
+  if (act === 'toggle') { d.on = !d.on;  await saveDish(d); refreshSheet(); renderLib(); renderPoolLine(); }
   if (act === 'rmimg')  {
     const old = d.img; d.img = '';
-    if (await saveDish(d)) { deletePhoto(old); renderLib(); if (state.current?.id === d.id) renderBoard(); }
+    if (await saveDish(d)) { deletePhoto(old); refreshSheet(); renderLib(); if (state.current?.id === d.id) renderBoard(); }
   }
   if (act === 'del') {
     if (!confirm(`把「${d.n}」从菜库删掉？`)) return;
     if (!await removeDish(d)) return;
     state.dishes = state.dishes.filter(x => x.id !== d.id);
-    openId = null;
     if (state.current?.id === d.id) { state.current = null; $('btnEat').disabled = true; renderBoard(); }
-    renderLib(); renderPoolLine(); toast('删掉了');
+    closeSheet(); renderLib(); renderPoolLine(); toast('删掉了');
   }
 });
 
-$('libList').addEventListener('change', async e => {
+$('sheet').addEventListener('change', async e => {
   const el = e.target;
-  const item = el.closest('.item');
-  if (!item) return;
-  const d = findDish(item.dataset.id);
+  const d = sheetDish();
   if (!d) return;
-  if (!canEdit()) { toast('先在菜库页登录才能改'); renderLib(); return; }
+  const isNew = !!$('sheet').dataset.new;
+  if (!canEdit()) { toast('先在菜库页登录才能改'); return; }
 
+  /* 选图片 */
   if (el.dataset.act === 'pick' && el.files?.[0]) {
+    if (isNew) {                       // 新菜先本地预览，保存时再传
+      pendingFile = el.files[0];
+      const pv = $('sheet').querySelector('.pv');
+      const url = URL.createObjectURL(pendingFile);
+      pv.outerHTML = `<img class="pv" src="${url}" alt="">`;
+      return;
+    }
     try {
       toast('正在上传…');
       const old = d.img;
       d.img = await uploadPhoto(d.id, el.files[0]);
       if (await saveDish(d)) { if (old) deletePhoto(old); toast('图片存好了'); }
-      renderLib();
+      refreshSheet(); renderLib();
       if (state.current?.id === d.id) renderBoard();
     } catch (err) { toast('传不上去：' + (err.message || '')); }
     return;
   }
 
+  /* 普通字段 */
   const f = el.dataset.f;
   if (!f) return;
   if (f === 'min') d.min = Math.max(1, +el.value || 20);
   else if (f === 'n') { const v = el.value.trim(); if (v) d.n = v; else { el.value = d.n; return; } }
-  else d[f] = el.value.trim ? el.value.trim() : el.value;
+  else d[f] = typeof el.value === 'string' ? el.value.trim() : el.value;
 
+  if (isNew) return;                   // 新菜等「加进菜库」一起存
   await saveDish(d);
   if (state.current?.id === d.id) renderBoard();
-  if (f === 'c' || f === 'n' || f === 'img') renderLib();
-  renderPoolLine();
+  renderLib(); renderPoolLine();
+  if (f === 'n') $('sheet').querySelector('.sheethead h2').textContent = d.n;
 });
 
-/* ========== 加菜（带配图） ========== */
-let pendingFile = null;
-
-$('btnAddToggle').onclick = function () {
-  const p = $('addPanel');
-  if (!p.innerHTML) {
-    p.innerHTML = `
-      <div class="grp"><input class="field" id="nName" placeholder="菜名" autocomplete="off"></div>
-      <div class="grp"><div class="editrow">
-        ${selField('c', CATS, '猪肉').replace('data-f="c"', 'id="nCat"')}
-        ${selField('k', METHODS, '炒').replace('data-f="k"', 'id="nMethod"')}
-        ${selField('t', TASTES, '咸鲜').replace('data-f="t"', 'id="nTaste"')}
-        <input class="field" id="nMin" type="number" inputmode="numeric" min="1" value="20" style="flex:0 0 84px">
-      </div></div>
-      <div class="grp"><div class="imgbox">
-        <div id="nPreview" class="thumb none" style="width:96px;height:96px">无图</div>
-        <div class="imgside">
-          <label class="btn sm filelabel">选张图片<input type="file" accept="image/*" id="nFile" hidden></label>
-          <input class="field" id="nImgUrl" placeholder="或粘贴一个图片网址">
-        </div>
-      </div></div>
-      <div class="grp"><button class="btn primary" id="nSave">加进菜库</button></div>`;
-    $('nSave').onclick = addDish;
-    $('nFile').addEventListener('change', e => {
-      pendingFile = e.target.files?.[0] || null;
-      const box = $('nPreview');
-      if (!pendingFile) return;
-      const url = URL.createObjectURL(pendingFile);
-      box.outerHTML = `<img id="nPreview" src="${url}" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:3px">`;
-    });
-  }
-  p.hidden = !p.hidden;
-  this.textContent = p.hidden ? '加菜' : '收起';
-  if (!p.hidden) $('nName').focus();
+/* ========== 加菜 ========== */
+$('btnAddToggle').onclick = () => {
+  if (!canEdit()) { toast('先登录才能加菜'); return; }
+  openSheet(normalize({ id: newId(), n: '', c: libCat && CATS.includes(libCat) ? libCat : '猪肉' }), true);
+  setTimeout(() => $('sheet').querySelector('[data-f="n"]')?.focus(), 60);
 };
 
-async function addDish() {
-  if (!canEdit()) { toast('先登录才能加菜'); return; }
-  const n = $('nName').value.trim();
-  if (!n) { toast('先写个菜名'); return; }
-  if (state.dishes.some(d => d.n === n)) { toast('菜库里已经有了'); return; }
+async function createDish(d) {
+  const nameEl = $('sheet').querySelector('[data-f="n"]');
+  d.n = (nameEl?.value || '').trim();
+  if (!d.n) { toast('先写个菜名'); nameEl?.focus(); return; }
+  if (state.dishes.some(x => x.n === d.n)) { toast('菜库里已经有了'); return; }
 
-  const btn = $('nSave');
-  btn.disabled = true;
-  const d = normalize({
-    id: newId(), n, c: $('nCat').value,
-    k: $('nMethod').value, t: $('nTaste').value, min: +$('nMin').value,
-    img: $('nImgUrl').value.trim()
-  });
-
+  const btn = $('sheet').querySelector('[data-act="create"]');
+  btn.disabled = true; btn.textContent = '正在存…';
   try {
-    if (pendingFile) { toast('正在上传图片…'); d.img = await uploadPhoto(d.id, pendingFile); }
-  } catch (err) { toast('图片没传上去，菜先加了'); }
+    if (pendingFile) d.img = await uploadPhoto(d.id, pendingFile);
+  } catch { toast('图片没传上去，菜先加了'); }
 
   if (await saveDish(d)) {
     state.dishes.push(d);
-    $('nName').value = ''; $('nImgUrl').value = ''; $('nFile').value = ''; pendingFile = null;
-    const pv = $('nPreview');
-    if (pv) pv.outerHTML = '<div id="nPreview" class="thumb none" style="width:96px;height:96px">无图</div>';
-    renderLib(); renderPoolLine();
-    toast(`加好了：${n}`);
+    closeSheet(); renderLib(); renderPoolLine();
+    toast(`加好了：${d.n}`);
+  } else {
+    btn.disabled = false; btn.textContent = '加进菜库';
   }
-  btn.disabled = false;
 }
 
 /* ========== 备份 / 播种 ========== */
