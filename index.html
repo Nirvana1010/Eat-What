@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 <div class="wrap">
@@ -25,8 +25,6 @@
 
   <!-- ===== 菜单 ===== -->
   <section class="view on" id="v-lib">
-    <div class="account" id="account"></div>
-
     <div class="libhead">
       <input class="field" id="q" placeholder="搜菜名" autocomplete="off">
       <button class="btn sm" id="btnAddToggle">加菜</button>
@@ -38,8 +36,9 @@
       <p class="hint" id="cloudNote"></p>
       <div class="row" style="flex-wrap:wrap">
         <button class="btn sm" id="btnExport">导出备份</button>
-        <button class="btn sm" id="btnSeed" hidden>导入初始 97 道菜</button>
+        <button class="btn sm" id="btnSeed" hidden>导入菜单</button>
       </div>
+      <div class="account" id="account"></div>
     </div>
   </section>
 
@@ -71,7 +70,7 @@
 <div id="sheet" hidden></div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="config.js?v=12"></script>
-<script type="module" src="app.js?v=12"></script>
+<script src="config.js?v=13"></script>
+<script type="module" src="app.js?v=13"></script>
 </body>
 </html>

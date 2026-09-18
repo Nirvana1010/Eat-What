@@ -205,9 +205,13 @@ textarea.field{resize:vertical;min-height:62px;line-height:1.6}
 .icon.on{color:var(--accent-strong)}
 
 /* ---------- 账号 / 状态 ---------- */
-.account{margin-bottom:18px}
+.account{margin-top:16px}
 .acct{display:flex;align-items:center;justify-content:space-between;gap:10px;
-  font-size:.86rem;color:var(--dim);letter-spacing:.06em}
+  font-size:.82rem;color:var(--dim);letter-spacing:.06em}
+.linkbtn{background:none;border:0;padding:0;color:var(--dim);font-size:.82rem;
+  letter-spacing:.06em;text-decoration:underline;text-decoration-style:dotted;
+  text-underline-offset:3px}
+.linkbtn:hover{color:var(--ink)}
 .warn{font-size:.89rem;color:var(--seal);border:1px solid var(--seal);border-radius:var(--r);
   padding:10px 13px;line-height:1.7}
 
