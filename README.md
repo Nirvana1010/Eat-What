@@ -1,6 +1,6 @@
 # 今天吃什么
 
-一个给自己用的家常菜菜单：抽菜、配一桌、管理菜库，带图片。
+一个给自己用的家常菜菜单：抽菜、管理菜库，带图片。
 页面是纯静态的（放 GitHub Pages），数据和图片放在 Supabase，所以手机、电脑打开同一个网址就是同一份。
 
 - 看：谁都能看，不用登录。
@@ -50,7 +50,7 @@ git push -u origin main
 
 ## 四、灌初始菜库
 
-第一次打开时云端是空的。在菜库页登录，然后点最下面的 **「导入初始 84 道菜」**，会把 `data/dishes.json` 写进 Supabase。只需要做一次。
+第一次打开时云端是空的。在菜库页登录，然后点最下面的 **「导入初始 97 道菜」**，会把 `data/dishes.json` 写进 Supabase。只需要做一次。
 
 之后想加菜就用页面上的「加菜」，改 `data/dishes.json` 不再影响云端。
 
@@ -74,7 +74,7 @@ style.css             样式（跟随系统深浅色：浅色是纸菜牌，深�
 app.js                全部逻辑（ES module，从 CDN 引 supabase-js）
 config.js             填你的 Supabase URL 和 anon key
 supabase.sql          建表 + 权限 + 图片桶
-data/dishes.json      初始菜库，84 道家常菜（只用于第一次导入）
+data/dishes.json      初始菜库，97 道家常菜（只用于第一次导入）
 manifest.webmanifest  加到主屏用
 icon.svg              图标
 ```
@@ -94,8 +94,7 @@ icon.svg              图标
 |---|---|---|
 | `id` | 唯一 ID | 文本 |
 | `name` | 菜名 | |
-| `category` | 分类 | 荤菜 / 素菜 / 汤羹 / 主食 / 凉菜 / 早餐 |
-| `main_ing` | 主料 | 猪肉 / 牛肉 / 羊肉 / 鸡肉 / 鱼虾 / 蛋 / 豆制品 / 蔬菜 / 菌菇 / 米面 |
+| `category` | 分类 | 猪肉 / 牛肉 / 羊肉 / 鸡肉 / 海鲜 / 鸡蛋 / 素菜 / 火锅 / 汤羹 / 主食 / 凉菜 / 早餐 |
 | `method` | 做法 | 炒 / 炖 / 蒸 / 煮 / 焖 / 煎炸 / 凉拌 |
 | `taste` | 口味 | 清淡 / 咸鲜 / 香辣 / 麻辣 / 酸甜 / 酸辣 / 浓香 |
 | `minutes` | 大概用时 | 数字 |
@@ -105,14 +104,37 @@ icon.svg              图标
 
 `meals` 表记录「就吃它」按下的每一次，用来避开最近重样。
 
-想改筛选项本身（比如加个「粤菜」分类），改 `app.js` 顶部的 `CATS` / `MAINS` / `METHODS` / `TASTES` 四个数组即可，数据库那边是纯文本列，不用改表。
+分类按「这道菜在桌上是什么角色」归，不是按里面有什么肉：冬瓜排骨汤算汤羹不算猪肉，红烧牛肉面算主食不算牛肉，口水鸡算凉菜不算鸡肉。
+
+想改分类或筛选项，改 `app.js` 顶部的 `CATS` / `METHODS` / `TASTES` 三个数组即可，数据库那边是纯文本列，不用改表。
 
 ## 抽签规则
 
 - 抽菜时按筛选条件过滤，并跳过最近 N 天按过「就吃它」的菜（N 在筛选的「重样」里，默认 7 天）。
 - 条件太窄导致没菜可抽时，会自动放宽「不重样」这一条并提示。
-- 「配一桌」按分类凑：两菜 = 荤 + 素，三菜一汤 = 荤 + 素 + 汤，四菜一汤 = 荤 + 荤 + 素 + 汤，其他筛选条件照样生效。
 
 ## 离线
 
 页面会把上次读到的菜库缓存在 localStorage 里，网慢或断网时先显示缓存内容，连上后立刻覆盖。缓存只是加速，真正的数据在 Supabase。
+
+## 已经导入过旧分类的话
+
+如果你之前已经把 84 道菜灌进了 Supabase，分类还是老的（荤菜/素菜/…）。
+在 SQL Editor 跑一次这段，按旧的 `main_ing` 自动归到新分类：
+
+```sql
+update dishes set category = case
+  when category in ('汤羹','主食','凉菜','早餐') then category
+  when main_ing = '猪肉' then '猪肉'
+  when main_ing = '牛肉' then '牛肉'
+  when main_ing = '羊肉' then '羊肉'
+  when main_ing = '鸡肉' then '鸡肉'
+  when main_ing = '鱼虾' then '海鲜'
+  when main_ing = '蛋'   then '鸡蛋'
+  else '素菜'
+end;
+
+alter table dishes drop column if exists main_ing;
+```
+
+跑完再回页面点一次「导入初始 97 道菜」，会把新增的火锅、羊肉、鸡蛋那 13 道补进去（同名的不会重复）。

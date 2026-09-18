@@ -20,7 +20,6 @@
 
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" aria-selected="true" data-view="draw">抽菜</button>
-    <button class="tab" role="tab" aria-selected="false" data-view="table">配一桌</button>
     <button class="tab" role="tab" aria-selected="false" data-view="lib">菜库</button>
   </div>
 
@@ -47,23 +46,6 @@
     </div>
   </section>
 
-  <!-- ===== 配一桌 ===== -->
-  <section class="view" id="v-table">
-    <div class="filterbar">
-      <div class="filtersum">按「抽菜」里的筛选条件配</div>
-      <select class="field" id="tableSize" style="flex:0 0 auto">
-        <option value="2">两菜</option>
-        <option value="3" selected>三菜一汤</option>
-        <option value="4">四菜一汤</option>
-      </select>
-    </div>
-    <div id="tableOut"><p class="empty">配一桌搭配好的菜，荤素汤各来一道。</p></div>
-    <div class="row" style="margin-top:14px">
-      <button class="btn" id="btnTable">配一桌</button>
-      <button class="btn primary" id="btnTableEat" disabled>就这桌</button>
-    </div>
-  </section>
-
   <!-- ===== 菜库 ===== -->
   <section class="view" id="v-lib">
     <div class="account" id="account"></div>
@@ -80,7 +62,7 @@
       <p class="hint" id="cloudNote">菜和图片都存在云端，手机、电脑打开同一个网址就是同一份。</p>
       <div class="row" style="margin-top:10px;flex-wrap:wrap">
         <button class="btn sm" id="btnExport">导出备份</button>
-        <button class="btn sm" id="btnSeed" hidden>导入初始 84 道菜</button>
+        <button class="btn sm" id="btnSeed" hidden>导入初始 97 道菜</button>
       </div>
     </div>
   </section>

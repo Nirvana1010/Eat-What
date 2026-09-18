@@ -127,12 +127,6 @@ textarea.field{resize:vertical;min-height:56px;line-height:1.5}
 .imgbox img{width:96px;height:96px;object-fit:cover;border-radius:3px;border:1px solid var(--line)}
 .imgside{flex:1;display:flex;flex-direction:column;gap:7px;min-width:0}
 
-/* ---- 配一桌 ---- */
-.tablecard{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:var(--radius);
-  background:var(--surface);padding:10px;margin-bottom:9px}
-.tablecard img,.tablecard .thumb{width:64px;height:64px;flex:0 0 64px}
-.tablecard .n{font-family:var(--serif);font-size:1.15rem;font-weight:500}
-
 .empty{text-align:center;color:var(--dim);font-size:.88rem;padding:32px 10px;line-height:2}
 
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:var(--bg);

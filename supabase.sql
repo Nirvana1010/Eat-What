@@ -6,8 +6,7 @@
 create table if not exists dishes (
   id         text primary key,
   name       text not null,
-  category   text not null default '荤菜',   -- 荤菜/素菜/汤羹/主食/凉菜/早餐
-  main_ing   text not null default '蔬菜',   -- 主料
+  category   text not null default '素菜',   -- 猪肉/牛肉/羊肉/鸡肉/海鲜/鸡蛋/素菜/火锅/汤羹/主食/凉菜/早餐
   method     text not null default '炒',     -- 做法
   taste      text not null default '咸鲜',   -- 口味
   minutes    int  not null default 20,       -- 大概用时
