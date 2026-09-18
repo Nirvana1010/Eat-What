@@ -141,3 +141,12 @@ textarea.field{resize:vertical;min-height:56px;line-height:1.5}
 .toast[hidden]{display:none}
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---- 账号 / 云端状态 ---- */
+.account{margin-bottom:16px}
+.acct{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  font-size:.82rem;color:var(--dim);letter-spacing:.04em}
+.warn{font-size:.84rem;color:var(--seal);border:1px solid var(--seal);border-radius:var(--radius);
+  padding:9px 12px;line-height:1.6}
+.filelabel{display:inline-block;text-align:center}
+.filelabel:hover{border-color:var(--ink)}
