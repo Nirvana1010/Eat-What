@@ -8,7 +8,6 @@ create table if not exists dishes (
   name       text not null,
   category   text not null default '素菜',   -- 猪肉/牛肉/羊肉/鸡肉/海鲜/鸡蛋/素菜/火锅/汤羹/主食/凉菜/早餐
   method     text not null default '炒',     -- 做法
-  taste      text not null default '咸鲜',   -- 口味
   minutes    int  not null default 20,       -- 大概用时
   fav        boolean not null default false, -- 收藏
   active     boolean not null default true,  -- 是否参与抽签

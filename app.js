@@ -8,7 +8,6 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 /* ========== 词表（改这里就能改筛选项） ========== */
 const CATS    = ['猪肉','牛肉','羊肉','鸡肉','海鲜','鸡蛋','素菜','火锅','汤羹','主食','凉菜','早餐'];
 const METHODS = ['炒','炖','蒸','煮','焖','煎炸','凉拌'];
-const TASTES  = ['清淡','咸鲜','香辣','麻辣','酸甜','酸辣','浓香'];
 
 /* ========== 小工具 ========== */
 const $ = id => document.getElementById(id);
@@ -48,7 +47,7 @@ const sb = CONFIGURED ? createClient(CFG.SUPABASE_URL.trim().replace(/\/$/, ''),
 const state = { dishes: [], log: [], current: null, ready: false, session: null };
 const canEdit = () => !!state.session;
 
-let F = { cat:'', taste:'', method:'', maxMin:0, favOnly:false, avoid:7 };
+let F = { cat:'', method:'', maxMin:0, favOnly:false, avoid:7 };
 try { const s = localStorage.getItem('menu.filters'); if (s) F = { ...F, ...JSON.parse(s) }; } catch {}
 const saveF = () => { try { localStorage.setItem('menu.filters', JSON.stringify(F)); } catch {} };
 
@@ -67,12 +66,12 @@ function writeCache() {
 /* ========== 行 <-> 内部结构 ========== */
 function fromRow(r) {
   return {
-    id: r.id, n: r.name, c: r.category, k: r.method, t: r.taste,
+    id: r.id, n: r.name, c: r.category, k: r.method,
     min: r.minutes, fav: !!r.fav, on: r.active !== false, note: r.note || '', img: r.img || ''
   };
 }
 const toRow = d => ({
-  id: d.id, name: d.n, category: d.c, method: d.k, taste: d.t,
+  id: d.id, name: d.n, category: d.c, method: d.k,
   minutes: d.min, fav: d.fav, active: d.on, note: d.note, img: d.img, updated_at: new Date().toISOString()
 });
 
@@ -82,7 +81,6 @@ function normalize(d) {
     n: String(d.n || '').trim(),
     c: CATS.includes(d.c) ? d.c : '素菜',
     k: METHODS.includes(d.k) ? d.k : '炒',
-    t: TASTES.includes(d.t) ? d.t : '咸鲜',
     min: Math.max(1, +d.min || 20),
     fav: !!d.fav, on: d.on !== false, note: d.note || '', img: d.img || ''
   };
@@ -209,13 +207,12 @@ const numChips = (key, pairs) => pairs.map(([v, label]) =>
 function renderFilters() {
   $('fpanel').innerHTML =
       grp('分类', chipRow('cat', CATS, F.cat))
-    + grp('口味', chipRow('taste', TASTES, F.taste))
     + grp('做法', chipRow('method', METHODS, F.method))
     + grp('用时', numChips('maxMin', [[0,'不限'],[15,'15 分钟内'],[30,'30 分钟内'],[60,'1 小时内']]))
     + grp('重样', numChips('avoid', [[0,'不避开'],[3,'3 天内不重'],[7,'7 天内不重'],[14,'14 天内不重']]))
     + grp('收藏', `<button class="chip" data-k="favOnly" data-v="1" aria-pressed="${F.favOnly}">只抽收藏的</button>`);
 
-  const sum = [F.cat, F.taste, F.method].filter(Boolean);
+  const sum = [F.cat, F.method].filter(Boolean);
   if (F.maxMin) sum.push(F.maxMin + ' 分钟内');
   if (F.favOnly) sum.push('只抽收藏');
   $('fsum').textContent = sum.length ? sum.join(' · ') : '全部菜里随便抽';
@@ -247,7 +244,6 @@ const eatenWithin = (id, days) => !!days && state.log.some(e => e.id === id && d
 function match(d) {
   if (!d.on) return false;
   if (F.cat && d.c !== F.cat) return false;
-  if (F.taste && d.t !== F.taste) return false;
   if (F.method && d.k !== F.method) return false;
   if (F.maxMin && d.min > F.maxMin) return false;
   if (F.favOnly && !d.fav) return false;
@@ -260,7 +256,7 @@ function pool(useAvoid) {
 }
 
 /* ========== 抽菜 ========== */
-const dishTags = d => [d.c, d.k, d.t, d.min + ' 分钟'];
+const dishTags = d => [d.c, d.k, d.min + ' 分钟'];
 const tagHtml = d => `<div class="tags">${dishTags(d).map(x => `<span class="tag">${esc(x)}</span>`).join('')}</div>`;
 
 function renderBoard() {
@@ -360,7 +356,7 @@ $('catnav').addEventListener('click', e => {
 });
 
 function tile(d) {
-  const meta = [d.k, d.t, d.min + ' 分钟'].join(' · ');
+  const meta = [d.k, d.min + ' 分钟'].join(' · ');
   const marks = (d.fav ? '<span class="heart">♥</span>' : '')
               + (d.on ? '' : '<span class="resting">歇着</span>');
   if (d.img) {
@@ -430,7 +426,7 @@ function sheetBody(d, isNew) {
         </div>
         <input class="field" data-f="n" value="${esc(d.n)}" placeholder="菜名">
         <div class="editrow">
-          ${selField('c', CATS, d.c)}${selField('k', METHODS, d.k)}${selField('t', TASTES, d.t)}
+          ${selField('c', CATS, d.c)}${selField('k', METHODS, d.k)}
           <input class="field" data-f="min" type="number" inputmode="numeric" min="1" value="${d.min}" style="flex:0 0 88px">
         </div>
         <textarea class="field" data-f="note" placeholder="做法要点、配菜、链接…">${esc(d.note)}</textarea>
