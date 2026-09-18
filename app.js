@@ -396,10 +396,29 @@ function renderCatNav() {
   const cats = CATS.filter(c => counts[c]);
   const other = state.dishes.filter(d => !CATS.includes(d.c)).length;
   $('catnav').innerHTML =
-    `<button class="chip" data-c="" aria-pressed="${libCat ? 'false' : 'true'}">全部 ${state.dishes.length}</button>`
-    + cats.map(c => `<button class="chip" data-c="${c}" aria-pressed="${libCat === c ? 'true' : 'false'}">${icon(c)}${c} ${counts[c]}</button>`).join('')
-    + (other ? `<button class="chip" data-c="其他" aria-pressed="${libCat === '其他' ? 'true' : 'false'}">${icon('其他')}其他 ${other}</button>` : '');
+    `<button class="chip" data-c="" aria-pressed="${libCat ? 'false' : 'true'}">全部<span class="num">${state.dishes.length}</span></button>`
+    + cats.map(c => `<button class="chip" data-c="${c}" aria-pressed="${libCat === c ? 'true' : 'false'}">${icon(c)}${c}<span class="num">${counts[c]}</span></button>`).join('')
+    + (other ? `<button class="chip" data-c="其他" aria-pressed="${libCat === '其他' ? 'true' : 'false'}">${icon('其他')}其他<span class="num">${other}</span></button>` : '');
+  centerActiveCat();
 }
+
+/* 窄屏时：标记两端位置好让 CSS 决定渐隐，并把选中的分类滚到视野中间 */
+function updateNavEdges() {
+  const el = $('catnav');
+  const slack = el.scrollWidth - el.clientWidth;
+  el.classList.toggle('scrollable', slack > 2);
+  el.classList.toggle('at-start', el.scrollLeft <= 2);
+  el.classList.toggle('at-end', el.scrollLeft >= slack - 2);
+}
+function centerActiveCat() {
+  const el = $('catnav');
+  if (el.scrollWidth - el.clientWidth <= 2) return;
+  const sel = el.querySelector('.chip[aria-pressed="true"]');
+  if (sel) el.scrollLeft = sel.offsetLeft - el.clientWidth / 2 + sel.offsetWidth / 2;
+  updateNavEdges();
+}
+$('catnav').addEventListener('scroll', updateNavEdges, { passive: true });
+addEventListener('resize', updateNavEdges);
 
 $('catnav').addEventListener('click', e => {
   const b = e.target.closest('.chip');
