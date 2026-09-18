@@ -11,11 +11,17 @@
 1. 去 https://supabase.com 注册，New project（免费档就够：500 MB 数据库 + 1 GB 存储）。
 2. 左边 **SQL Editor** → New query → 把仓库里 `supabase.sql` 的全文粘进去 → Run。
    这一步会建两张表、设好权限、并创建公开的图片桶 `dish-photos`。
-3. 左边 **Project Settings → API**，复制 `Project URL` 和 `anon public` 这两个值。
-4. 打开 `config.js`，把这两个值填进去。
+3. 拿 Project URL 和 key。最快是项目首页顶部的 **[Connect]** 按钮，对话框里两个都有。
+   要单独找就去 **Settings → API Keys**：
+   - 新项目：**API Keys** 标签页 → Publishable key（`sb_publishable_` 开头的短字符串）。没有就点 Create new API Keys。
+   - 老项目：**Legacy API Keys** 标签页 → `anon public`（`eyJ` 开头的长串）。
+   两种都能用，有 publishable 就用它 —— `anon` key 2026 年底停用。
+4. 打开 `config.js`，把 URL 和 key 填进去。
 
-> `anon key` 本来就是给前端用的公开 key，放进公开仓库没问题 —— 真正的权限在 `supabase.sql` 的 RLS 策略里（谁都能读，只有登录用户能写）。
-> **不要**把 `service_role` key 放进来。
+> Project URL 也可以自己拼：后台地址栏 `/dashboard/project/<ref>` 里的那个 ref，拼成 `https://<ref>.supabase.co`。
+>
+> 这个 key 本来就是给前端用的公开 key，放进公开仓库没问题 —— 真正的权限在 `supabase.sql` 的 RLS 策略里（谁都能读，只有登录用户能写）。
+> **不要**把 `service_role` 或 `sb_secret_` 开头的 key 放进来。
 
 ## 二、允许你的域名登录
 

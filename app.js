@@ -38,10 +38,12 @@ function cnDate(s) {
 
 /* ========== Supabase ========== */
 const CFG = window.CONFIG || {};
-const CONFIGURED = /^https:\/\/.+\.supabase\.co/.test(CFG.SUPABASE_URL || '')
-                && (CFG.SUPABASE_ANON_KEY || '').length > 40;
+// 新的 sb_publishable_ key 和老的 anon key（eyJ 开头的 JWT）都支持
+const KEY = CFG.SUPABASE_KEY || CFG.SUPABASE_ANON_KEY || '';
+const CONFIGURED = /^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test((CFG.SUPABASE_URL || '').trim())
+                && (KEY.startsWith('sb_publishable_') || KEY.startsWith('eyJ'));
 const BUCKET = CFG.BUCKET || 'dish-photos';
-const sb = CONFIGURED ? createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : null;
+const sb = CONFIGURED ? createClient(CFG.SUPABASE_URL.trim().replace(/\/$/, ''), KEY) : null;
 
 /* ========== 状态 ========== */
 const state = { dishes: [], log: [], current: null, table: [], ready: false, session: null };
@@ -170,7 +172,7 @@ function deletePhoto(url) {
 function renderAccount() {
   const box = $('account');
   if (!CONFIGURED) {
-    box.innerHTML = '<div class="warn">还没填 config.js 里的 Supabase 地址和 key，改不了也同步不了。看 README。</div>';
+    box.innerHTML = '<div class="warn">config.js 里的 Supabase 地址或 key 还没填对，改不了也同步不了。看 README。</div>';
     return;
   }
   box.innerHTML = state.session
