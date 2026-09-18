@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<!-- 字体方案：kuaile = 菜名用站酷快乐体｜wenkai = 全站霞鹜文楷。改这一个词就切换。 -->
+<html lang="zh-CN" data-font="kuaile">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -8,8 +9,12 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=13">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<!-- 方案 A：站酷快乐体 + Noto Sans SC（Google Fonts，按需分包） -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+<!-- 方案 B：霞鹜文楷屏幕阅读版（jsDelivr，按需分包）。定下来后把用不上的这行删掉 -->
+<link href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-web/style.css" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
 <div class="wrap">
@@ -70,7 +75,7 @@
 <div id="sheet" hidden></div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="config.js?v=13"></script>
-<script type="module" src="app.js?v=13"></script>
+<script src="config.js?v=14"></script>
+<script type="module" src="app.js?v=14"></script>
 </body>
 </html>
