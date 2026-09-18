@@ -9,6 +9,59 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const CATS    = ['猪肉','牛肉','羊肉','鸡肉','海鲜','鸡蛋','素菜','火锅','汤羹','主食','凉菜','早餐'];
 const METHODS = ['炒','炖','蒸','煮','焖','煎炸','凉拌'];
 
+
+/* ========== 分类线描图标 ========== */
+const ICON_PATHS = {
+  '猪肉': '<path d="M5.4 9.6 4.1 6.3l3.3 1.2"/><path d="M18.6 9.6l1.3-3.3-3.3 1.2"/>'
+        + '<path d="M12 7.2c3.9 0 6.8 2.5 6.8 5.6S15.9 19 12 19s-6.8-3.1-6.8-6.2S8.1 7.2 12 7.2Z"/>'
+        + '<ellipse cx="12" cy="14.3" rx="2.7" ry="1.9"/>'
+        + '<circle cx="11.1" cy="14.3" r=".45"/><circle cx="12.9" cy="14.3" r=".45"/>',
+  '牛肉': '<path d="M7.6 8.4C5.2 9 2.7 8 1.6 5.8c2.2-1.3 4.9-.9 6.6 1"/>'
+        + '<path d="M16.4 8.4c2.4.6 4.9-.4 6-2.6-2.2-1.3-4.9-.9-6.6 1"/>'
+        + '<path d="M12 7.5c2.9 0 4.7 1.8 4.7 4.2 0 1.5-.5 3-1.4 4.1-.9 1.1-2 1.8-3.3 1.8s-2.4-.7-3.3-1.8c-.9-1.1-1.4-2.6-1.4-4.1 0-2.4 1.8-4.2 4.7-4.2Z"/>'
+        + '<ellipse cx="12" cy="15.3" rx="2.5" ry="1.7"/>'
+        + '<circle cx="10.2" cy="11.2" r=".5"/><circle cx="13.8" cy="11.2" r=".5"/>',
+  '羊肉': '<path d="M7.9 9.4c-1.1-.5-1.4-2-.5-2.9.1-1.4 1.4-2.4 2.8-2.1.9-1.1 2.6-1.2 3.6-.2 1.3-.5 2.8.3 3.1 1.7 1.1.5 1.4 2 .5 2.9"/>'
+        + '<path d="M16.4 8.8c.3.8.5 1.7.5 2.6 0 3.1-2.2 5.6-4.9 5.6s-4.9-2.5-4.9-5.6c0-.9.2-1.8.5-2.6"/>'
+        + '<path d="M7.4 10.4c-1.5-.6-3 0-3.5 1.4 1.1 1 2.6 1.1 3.7.3"/>'
+        + '<path d="M16.6 10.4c1.5-.6 3 0 3.5 1.4-1.1 1-2.6 1.1-3.7.3"/>'
+        + '<circle cx="10.4" cy="12.2" r=".5"/><circle cx="13.6" cy="12.2" r=".5"/>',
+  '鸡肉': '<path d="M7.9 6.9c0-1.1 1.2-1.6 1.9-.8.4-1.1 1.9-1.2 2.4-.2.6-.8 1.9-.4 2 .8"/>'
+        + '<path d="M11.6 7.9c2.9 0 5.2 2.3 5.2 5.2 0 3-2.3 5.6-5.2 5.6s-5.2-2.6-5.2-5.6c0-2.9 2.3-5.2 5.2-5.2Z"/>'
+        + '<path d="M16.6 11.7 20.4 13l-3.8 1.4"/>'
+        + '<path d="M14.4 17.9c1 .3 1.5 1.4 1 2.3-1 .1-1.9-.6-2-1.6"/>'
+        + '<circle cx="13.8" cy="11.6" r=".55"/>',
+  '海鲜': '<path d="M22 12s-3.7 5-8.6 5S4.8 12 4.8 12s3.7-5 8.6-5S22 12 22 12Z"/>'
+        + '<path d="M4.9 12 1.6 8.2v7.6L4.9 12Z"/>'
+        + '<path d="M14.6 7.6c-1 1.3-1.5 2.8-1.5 4.4s.5 3.1 1.5 4.4"/>'
+        + '<path d="M10.4 8.6c.9.6 1.5 1.6 1.7 2.7"/>'
+        + '<circle cx="18" cy="11.1" r=".6"/>',
+  '鸡蛋': '<path d="M14 4.6c2.7 0 4.9 3.9 4.9 7.1 0 3.1-2.2 5.5-4.9 5.5s-4.9-2.4-4.9-5.5c0-3.2 2.2-7.1 4.9-7.1Z"/>'
+        + '<path d="M7.9 9.9c1.5 0 2.8 2.3 2.8 4.2 0 1.8-1.3 3.2-2.8 3.2S5 15.9 5 14.1c0-1.9 1.3-4.2 2.9-4.2Z"/>',
+  '素菜': '<path d="M12 19.6V9.2"/>'
+        + '<path d="M12 12.6c-1.9-2.6-1.3-6 1.4-7.7 1.6 2.9 1 6.1-1.4 7.7Z"/>'
+        + '<path d="M12 15.2c-2.5.5-4.9-1.1-5.6-3.6 2.6-.7 5.1.6 5.6 3.6Z"/>'
+        + '<path d="M12 15.2c2.5.5 4.9-1.1 5.6-3.6-2.6-.7-5.1.6-5.6 3.6Z"/>',
+  '火锅': '<path d="M8.8 4.8c0 1.1-1 1.4-1 2.5M12 3.9c0 1.3-1 1.6-1 2.8M15.2 4.8c0 1.1-1 1.4-1 2.5"/>'
+        + '<path d="M3.6 10.4h16.8v1.3c0 3.8-3.1 6.9-6.9 6.9h-3c-3.8 0-6.9-3.1-6.9-6.9v-1.3Z"/>'
+        + '<path d="M3.6 12.6H2.1M20.4 12.6h1.5M12 10.4v8.2"/>',
+  '汤羹': '<path d="M9.4 4.6c-.9 1.1.9 1.9 0 3M14.6 4.6c-.9 1.1.9 1.9 0 3"/>'
+        + '<path d="M3.5 10.6h17c0 4.1-3.3 7.4-7.4 7.4h-2.2c-4.1 0-7.4-3.3-7.4-7.4Z"/>'
+        + '<path d="M8.6 20.3h6.8"/>',
+  '主食': '<path d="M2.4 12.6h12.8c0 3.5-2.9 6.4-6.4 6.4s-6.4-2.9-6.4-6.4Z"/>'
+        + '<path d="M4.1 12.6c.8-2.3 2.8-3.8 4.7-3.8s3.9 1.5 4.7 3.8"/>'
+        + '<path d="M5.3 20.4h7"/>'
+        + '<path d="M12.6 12.1 20.9 4.4M14.6 13.4 21.6 7"/>',
+  '凉菜': '<ellipse cx="12" cy="15" rx="8.6" ry="4.2"/>'
+        + '<circle cx="9" cy="14.5" r="1.5"/><circle cx="12.5" cy="15.7" r="1.5"/><circle cx="15.5" cy="14.1" r="1.5"/>'
+        + '<path d="M12 10.8c.4-1.9 2.1-3.2 4-3.3"/>',
+  '早餐': '<path d="M8.8 4.2c-.8 1 .8 1.8 0 2.8M13 4.2c-.8 1 .8 1.8 0 2.8"/>'
+        + '<path d="M4.4 9.3h11.4v5.5c0 2.5-2.1 4.6-4.6 4.6H9c-2.5 0-4.6-2.1-4.6-4.6V9.3Z"/>'
+        + '<path d="M15.8 10.7h1.9c1.3 0 2.4 1.1 2.4 2.4s-1.1 2.4-2.4 2.4h-1.9"/>',
+  '其他': '<path d="M3.5 10.6h17c0 4.1-3.3 7.4-7.4 7.4h-2.2c-4.1 0-7.4-3.3-7.4-7.4Z"/><path d="M8.6 20.3h6.8"/>'
+};
+const icon = c => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${ICON_PATHS[c] || ICON_PATHS['其他']}</svg>`;
+
 /* ========== 小工具 ========== */
 const $ = id => document.getElementById(id);
 const esc = t => { const d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; };
@@ -321,7 +374,7 @@ function renderLog() {
   const box = $('logList');
   const last = state.log.slice(-12).reverse();
   if (!last.length) {
-    box.innerHTML = '<p class="empty">还没有记录。定下来的菜按「就吃它」，以后就能避开重样。</p>';
+    box.innerHTML = `<p class="empty"><span class="emptyic">${icon('汤羹')}</span>还没有记录。定下来的菜按「就吃它」，以后就能避开重样。</p>`;
     return;
   }
   box.innerHTML = last.map(e => {
@@ -344,8 +397,8 @@ function renderCatNav() {
   const other = state.dishes.filter(d => !CATS.includes(d.c)).length;
   $('catnav').innerHTML =
     `<button class="chip" data-c="" aria-pressed="${libCat ? 'false' : 'true'}">全部 ${state.dishes.length}</button>`
-    + cats.map(c => `<button class="chip" data-c="${c}" aria-pressed="${libCat === c ? 'true' : 'false'}">${c} ${counts[c]}</button>`).join('')
-    + (other ? `<button class="chip" data-c="其他" aria-pressed="${libCat === '其他' ? 'true' : 'false'}">其他 ${other}</button>` : '');
+    + cats.map(c => `<button class="chip" data-c="${c}" aria-pressed="${libCat === c ? 'true' : 'false'}">${icon(c)}${c} ${counts[c]}</button>`).join('')
+    + (other ? `<button class="chip" data-c="其他" aria-pressed="${libCat === '其他' ? 'true' : 'false'}">${icon('其他')}其他 ${other}</button>` : '');
 }
 
 $('catnav').addEventListener('click', e => {
@@ -367,6 +420,7 @@ function tile(d) {
     </button>`;
   }
   return `<button class="tile nophoto${d.on ? '' : ' off'}" data-id="${d.id}">
+    <span class="ghost">${icon(d.c)}</span>
     ${marks}<div class="cn">${esc(d.n)}</div><div class="cm">${esc(meta)}</div>
   </button>`;
 }
@@ -383,8 +437,8 @@ function renderLib() {
 
   if (!list.length) {
     box.innerHTML = state.dishes.length
-      ? '<p class="empty">这儿没有菜。<br>换个分类，或者用右上角「加菜」记一道。</p>'
-      : '<p class="empty">菜库还是空的。<br>登录后点下面的「导入初始 97 道菜」，或者直接「加菜」。</p>';
+      ? `<p class="empty"><span class="emptyic">${icon(libCat || '其他')}</span>这儿没有菜。<br>换个分类，或者用右上角「加菜」记一道。</p>`
+      : `<p class="empty"><span class="emptyic">${icon('主食')}</span>菜库还是空的。<br>登录后点下面的「导入初始 97 道菜」，或者直接「加菜」。</p>`;
     return;
   }
   box.innerHTML = `<div class="grid">${list.map(tile).join('')}</div>`;
@@ -411,7 +465,7 @@ function sheetBody(d, isNew) {
     <div class="sheet" role="dialog" aria-modal="true">
       <div class="grab"></div>
       <div class="sheethead">
-        <h2>${isNew ? '加一道菜' : esc(d.n)}</h2>
+        ${icon(d.c)}<h2>${isNew ? '加一道菜' : esc(d.n)}</h2>
         ${isNew ? '' : `<button class="icon${d.fav ? ' on' : ''}" data-act="fav" aria-label="收藏">${d.fav ? '♥' : '♡'}</button>`}
         <button class="icon" data-act="close" aria-label="关闭">✕</button>
       </div>
