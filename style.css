@@ -1,26 +1,26 @@
 /* 今天吃什么 —— 浅色是纸菜牌，深色是小馆子黑板 */
 :root{
-  --bg:#E7E3D7; --surface:#F4F0E6; --surface-2:#EBE6D9;
-  --ink:#1E2A24; --dim:#5C6960; --line:rgba(30,42,36,.18); --line-soft:rgba(30,42,36,.09);
-  --accent:#A8452C; --accent-ink:#F7F4EC; --seal:#B04A2E;
-  --shade:rgba(20,14,6,.55);
+  --bg:#ECE0CE; --surface:#F8F2E6; --surface-2:#EFE5D4;
+  --ink:#2B1D14; --dim:#7C6553; --line:rgba(43,29,20,.18); --line-soft:rgba(43,29,20,.08);
+  --accent:#B2381F; --accent-ink:#F8F2E6; --seal:#B2381F;
+  --shade:rgba(40,24,14,.52);
   --r:4px; --r-lg:12px;
   --serif:"Noto Serif SC",Songti SC,SimSun,Georgia,serif;
   --sans:"Noto Sans SC",-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --bg:#121C18; --surface:#1A2620; --surface-2:#22302A;
-    --ink:#EFEADE; --dim:#8E9C93; --line:rgba(239,234,222,.17); --line-soft:rgba(239,234,222,.08);
-    --accent:#E3A63F; --accent-ink:#121C18; --seal:#D1603C;
-    --shade:rgba(0,0,0,.6);
+    --bg:#191210; --surface:#221A16; --surface-2:#2C221D;
+    --ink:#F3E9DC; --dim:#A2907F; --line:rgba(243,233,220,.16); --line-soft:rgba(243,233,220,.07);
+    --accent:#F0A63C; --accent-ink:#191210; --seal:#D9503A;
+    --shade:rgba(12,7,4,.62);
   }
 }
 :root[data-theme="dark"]{
-  --bg:#121C18; --surface:#1A2620; --surface-2:#22302A;
-  --ink:#EFEADE; --dim:#8E9C93; --line:rgba(239,234,222,.17); --line-soft:rgba(239,234,222,.08);
-  --accent:#E3A63F; --accent-ink:#121C18; --seal:#D1603C;
-  --shade:rgba(0,0,0,.6);
+  --bg:#191210; --surface:#221A16; --surface-2:#2C221D;
+  --ink:#F3E9DC; --dim:#A2907F; --line:rgba(243,233,220,.16); --line-soft:rgba(243,233,220,.07);
+  --accent:#F0A63C; --accent-ink:#191210; --seal:#D9503A;
+  --shade:rgba(12,7,4,.62);
 }
 
 *{box-sizing:border-box}
@@ -56,10 +56,10 @@ h1{font-family:var(--serif);font-weight:700;font-size:1.45rem;margin:0;letter-sp
   border-radius:2px;pointer-events:none}
 .board .photo{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
 .board .overlay{position:absolute;inset:auto 0 0 0;padding:64px 20px 20px;text-align:center;
-  background:linear-gradient(to top,rgba(6,12,9,.90) 24%,rgba(6,12,9,.55) 58%,transparent);
-  color:#F4F0E6}
-.board .overlay .tag{color:rgba(244,240,230,.8);border-color:rgba(244,240,230,.32)}
-.board .overlay .note{color:rgba(244,240,230,.72)}
+  background:linear-gradient(to top,rgba(22,12,7,.92) 24%,rgba(22,12,7,.55) 58%,transparent);
+  color:#F8F2E6}
+.board .overlay .tag{color:rgba(248,242,230,.82);border-color:rgba(248,242,230,.34)}
+.board .overlay .note{color:rgba(248,242,230,.74)}
 
 .dish{font-family:var(--serif);font-weight:700;line-height:1.14;margin:0;word-break:keep-all;
   font-size:clamp(2.2rem,11.5vw,3.4rem);letter-spacing:.08em}
@@ -144,7 +144,7 @@ textarea.field{resize:vertical;min-height:62px;line-height:1.6}
 .tile:active{transform:scale(.985)}
 .tile img{width:100%;height:100%;object-fit:cover;display:block}
 .tile .cap{position:absolute;inset:auto 0 0 0;padding:30px 10px 10px;
-  background:linear-gradient(to top,rgba(6,12,9,.88) 30%,transparent);color:#F4F0E6}
+  background:linear-gradient(to top,rgba(22,12,7,.90) 30%,transparent);color:#F8F2E6}
 .tile .cn{font-family:var(--serif);font-size:1rem;font-weight:500;line-height:1.3;letter-spacing:.04em}
 .tile .cm{font-size:.66rem;opacity:.78;letter-spacing:.06em;margin-top:2px}
 
@@ -156,7 +156,7 @@ textarea.field{resize:vertical;min-height:62px;line-height:1.6}
 .tile.nophoto .cm{color:var(--dim);opacity:1;font-size:.68rem}
 .tile.off{opacity:.42}
 .tile .heart{position:absolute;top:7px;right:9px;font-size:.95rem;color:var(--accent);
-  text-shadow:0 1px 3px rgba(0,0,0,.4);z-index:2}
+  text-shadow:0 1px 4px rgba(20,10,4,.55);z-index:2}
 .tile .resting{position:absolute;top:8px;left:9px;font-size:.64rem;letter-spacing:.08em;
   color:var(--ink);background:var(--bg);border-radius:100px;padding:1px 7px;z-index:2}
 
@@ -201,7 +201,7 @@ textarea.field{resize:vertical;min-height:62px;line-height:1.6}
 .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:50;
   background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:100px;
   font-size:.84rem;letter-spacing:.06em;max-width:88vw;text-align:center;
-  box-shadow:0 8px 26px rgba(0,0,0,.26)}
+  box-shadow:0 8px 26px rgba(26,14,6,.3)}
 .toast[hidden]{display:none}
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
