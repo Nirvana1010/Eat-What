@@ -1,6 +1,6 @@
 # 今天吃什么
 
-一个给自己用的家常菜菜单：抽菜、管理菜库，带图片。
+一个给自己用的家常菜菜单：抽菜、管理菜单，带图片。
 页面是纯静态的（放 GitHub Pages），数据和图片放在 Supabase，所以手机、电脑打开同一个网址就是同一份。
 
 - 看：谁都能看，不用登录。
@@ -30,7 +30,7 @@ Supabase 控制台 → **Authentication → URL Configuration**：
 - `Site URL` 填 `https://<你的用户名>.github.io/<仓库名>/`
 - `Redirect URLs` 把上面这个地址也加进去；本地调试再加一条 `http://localhost:3000`
 
-登录方式用的是邮箱 magic link：在菜库页填邮箱 → 收到邮件 → 点链接就登录了，之后这台设备会一直保持登录。
+登录方式用的是邮箱 magic link：在菜单页填邮箱 → 收到邮件 → 点链接就登录了，之后这台设备会一直保持登录。
 
 > 免费档自带的邮件发送有频率限制（每小时几封），自己用够了。想更稳可以在 Authentication → Providers 里接自己的 SMTP。
 
@@ -48,9 +48,9 @@ git push -u origin main
 
 手机上打开后「添加到主屏幕」，用起来跟 App 一样。
 
-## 四、灌初始菜库
+## 四、灌初始菜单
 
-第一次打开时云端是空的。在菜库页登录，然后点最下面的 **「导入初始 97 道菜」**，会把 `data/dishes.json` 写进 Supabase。只需要做一次。
+第一次打开时云端是空的。在菜单页登录，然后点最下面的 **「导入初始 97 道菜」**，会把 `data/dishes.json` 写进 Supabase。只需要做一次。
 
 之后想加菜就用页面上的「加菜」，改 `data/dishes.json` 不再影响云端。
 
@@ -74,14 +74,14 @@ style.css             样式（跟随系统深浅色：浅色是纸菜牌，深�
 app.js                全部逻辑（ES module，从 CDN 引 supabase-js）
 config.js             填你的 Supabase URL 和 anon key
 supabase.sql          建表 + 权限 + 图片桶
-data/dishes.json      初始菜库，97 道家常菜（只用于第一次导入）
+data/dishes.json      初始菜单，97 道家常菜（只用于第一次导入）
 manifest.webmanifest  加到主屏用
 icon.svg              图标
 ```
 
 ## 图片
 
-菜库里点某道菜的 `···` → 「上传图片」。图片会先在浏览器里压到长边 1000px 的 JPEG（一张几十 KB），再传到 Supabase Storage，存下来的是一个公开 URL，所以别的设备打开也能看到。
+菜单里点某道菜的 `···` → 「上传图片」。图片会先在浏览器里压到长边 1000px 的 JPEG（一张几十 KB），再传到 Supabase Storage，存下来的是一个公开 URL，所以别的设备打开也能看到。
 加新菜的面板里也能直接选图，或者粘贴任何外部图片网址。
 
 换图会把旧图从桶里删掉，删菜也会连图一起删。
@@ -96,7 +96,6 @@ icon.svg              图标
 | `name` | 菜名 | |
 | `category` | 分类 | 猪肉 / 牛肉 / 羊肉 / 鸡肉 / 海鲜 / 鸡蛋 / 素菜 / 火锅 / 汤羹 / 主食 / 凉菜 / 早餐 |
 | `method` | 做法 | 炒 / 炖 / 蒸 / 煮 / 焖 / 煎炸 / 凉拌 |
-| `taste` | 口味 | 清淡 / 咸鲜 / 香辣 / 麻辣 / 酸甜 / 酸辣 / 浓香 |
 | `minutes` | 大概用时 | 数字 |
 | `active` | 是否参与抽签 | true / false |
 | `note` | 备注 | |
@@ -106,7 +105,7 @@ icon.svg              图标
 
 分类按「这道菜在桌上是什么角色」归，不是按里面有什么肉：冬瓜排骨汤算汤羹不算猪肉，红烧牛肉面算主食不算牛肉，口水鸡算凉菜不算鸡肉。
 
-想改分类或筛选项，改 `app.js` 顶部的 `CATS` / `METHODS` / `TASTES` 三个数组即可，数据库那边是纯文本列，不用改表。
+想改分类或筛选项，改 `app.js` 顶部的 `CATS` / `METHODS` 两个数组即可，数据库那边是纯文本列，不用改表。
 
 ## 抽签规则
 
@@ -115,7 +114,7 @@ icon.svg              图标
 
 ## 离线
 
-页面会把上次读到的菜库缓存在 localStorage 里，网慢或断网时先显示缓存内容，连上后立刻覆盖。缓存只是加速，真正的数据在 Supabase。
+页面会把上次读到的菜单缓存在 localStorage 里，网慢或断网时先显示缓存内容，连上后立刻覆盖。缓存只是加速，真正的数据在 Supabase。
 
 ## 已经导入过旧分类的话
 
@@ -135,6 +134,7 @@ update dishes set category = case
 end;
 
 alter table dishes drop column if exists main_ing;
+alter table dishes drop column if exists taste;
 ```
 
 跑完再回页面点一次「导入初始 97 道菜」，会把新增的火锅、羊肉、鸡蛋那 13 道补进去（同名的不会重复）。

@@ -129,7 +129,7 @@ textarea.field{resize:vertical;min-height:62px;line-height:1.6}
 .logline .lt{width:30px;height:30px;flex:0 0 30px;border-radius:3px;object-fit:cover;background:var(--surface-2)}
 .logline .ln{font-family:var(--serif);font-size:1.06rem}
 
-/* ---------- 菜库 ---------- */
+/* ---------- 菜单 ---------- */
 .libhead{display:flex;gap:10px;margin-bottom:12px}
 /* 宽屏换行铺开；窄屏横向滑动，两侧用渐隐提示还有内容 */
 .catnav{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 14px;margin-bottom:2px}

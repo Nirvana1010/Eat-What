@@ -1,5 +1,5 @@
 /* 今天吃什么 —— 静态页面 + Supabase。
-   菜库、吃过的记录存在 Supabase 的表里，图片存在 Storage 桶里，
+   菜单、吃过的记录存在 Supabase 的表里，图片存在 Storage 桶里，
    所以换设备打开同一个网址就是同一份数据。
    读不需要登录，改需要登录（规则见 supabase.sql）。 */
 
@@ -152,7 +152,7 @@ async function pull() {
 }
 
 async function saveDish(d) {
-  if (!canEdit()) { toast('先在菜库页登录才能改'); return false; }
+  if (!canEdit()) { toast('先在菜单页登录才能改'); return false; }
   const { error } = await sb.from('dishes').upsert(toRow(d));
   if (error) { toast('没存上：' + error.message); return false; }
   writeCache();
@@ -227,7 +227,7 @@ function renderAccount() {
   box.innerHTML = state.session
     ? `<div class="acct"><span>已登录 ${esc(state.session.user.email || '')}</span>
          <button class="btn sm" id="btnOut">退出</button></div>`
-    : `<div class="acct"><span>只读模式，登录后才能改菜库</span></div>
+    : `<div class="acct"><span>只读模式，登录后才能改菜单</span></div>
        <div class="row" style="margin-top:8px">
          <input class="field" id="email" type="email" inputmode="email" placeholder="邮箱" autocomplete="email">
          <button class="btn sm" id="btnIn">发登录链接</button>
@@ -268,7 +268,7 @@ function renderFilters() {
   const sum = [F.cat, F.method].filter(Boolean);
   if (F.maxMin) sum.push(F.maxMin + ' 分钟内');
   if (F.favOnly) sum.push('只抽收藏');
-  $('fsum').textContent = sum.length ? sum.join(' · ') : '全部菜里随便抽';
+  $('fsum').textContent = sum.length ? sum.join(' · ') : '';
 
   const badge = $('fcount');
   badge.hidden = !sum.length;
@@ -288,7 +288,7 @@ $('fpanel').addEventListener('click', e => {
   if (k === 'favOnly') F.favOnly = !F.favOnly;
   else if (k === 'maxMin' || k === 'avoid') F[k] = +v;
   else F[k] = v;
-  saveF(); renderFilters(); renderPoolLine();
+  saveF(); renderFilters();
 });
 
 /* ========== 挑菜 ========== */
@@ -318,7 +318,7 @@ function renderBoard() {
 
   if (!d) {
     b.className = 'board blank';
-    b.innerHTML = `<p class="dish placeholder">${state.ready ? '按下面的按钮，抽一道菜' : '正在读菜库…'}</p>`;
+    b.innerHTML = `<p class="dish placeholder">${state.ready ? '按下面的按钮，抽一道菜' : '正在读菜单…'}</p>`;
   } else if (d.img) {
     b.className = 'board';
     b.innerHTML = `<img class="photo" src="${esc(d.img)}" alt="${esc(d.n)}"
@@ -332,11 +332,6 @@ function renderBoard() {
     b.innerHTML = `<div class="reveal"><p class="dish">${esc(d.n)}</p>${tagHtml(d)}
       ${d.note ? `<p class="note">${esc(d.note)}</p>` : ''}</div>`;
   }
-  renderPoolLine();
-}
-
-function renderPoolLine() {
-  $('poolLine').textContent = state.ready ? `符合条件的有 ${pool(true).length} 道` : '';
 }
 
 $('btnDraw').onclick = () => {
@@ -345,9 +340,8 @@ $('btnDraw').onclick = () => {
   if (!list.length) {
     state.current = null;
     $('board').className = 'board blank';
-    $('board').innerHTML = '<p class="dish placeholder">这些条件下没有菜<br>放宽筛选，或去菜库加几道</p>';
+    $('board').innerHTML = '<p class="dish placeholder">这些条件下没有菜<br>放宽筛选，或去菜单加几道</p>';
     $('btnEat').disabled = true;
-    renderPoolLine();
     return;
   }
   let pick = randOf(list);
@@ -364,7 +358,7 @@ $('btnEat').onclick = async function () {
   if (!state.current) return;
   this.disabled = true;
   await logDish(state.current);
-  renderLog(); renderPoolLine();
+  renderLog();
   const s = document.createElement('div');
   s.className = 'seal'; s.textContent = '今日';
   $('board').appendChild(s);
@@ -386,7 +380,7 @@ function renderLog() {
   }).join('');
 }
 
-/* ========== 菜库 ========== */
+/* ========== 菜单 ========== */
 let libCat = '';
 const findDish = id => state.dishes.find(d => d.id === id);
 
@@ -446,7 +440,7 @@ function tile(d) {
 
 function renderLib() {
   const box = $('libList');
-  if (!state.ready && !state.dishes.length) { box.innerHTML = '<p class="empty">正在读菜库…</p>'; return; }
+  if (!state.ready && !state.dishes.length) { box.innerHTML = '<p class="empty">正在读菜单…</p>'; return; }
   renderCatNav();
 
   const q = $('q').value.trim();
@@ -457,7 +451,7 @@ function renderLib() {
   if (!list.length) {
     box.innerHTML = state.dishes.length
       ? `<p class="empty"><span class="emptyic">${icon(libCat || '其他')}</span>这儿没有菜。<br>换个分类，或者用右上角「加菜」记一道。</p>`
-      : `<p class="empty"><span class="emptyic">${icon('主食')}</span>菜库还是空的。<br>登录后点下面的「导入初始 97 道菜」，或者直接「加菜」。</p>`;
+      : `<p class="empty"><span class="emptyic">${icon('主食')}</span>菜单还是空的。<br>登录后点下面的「导入初始 97 道菜」，或者直接「加菜」。</p>`;
     return;
   }
   box.innerHTML = `<div class="grid">${list.map(tile).join('')}</div>`;
@@ -504,7 +498,7 @@ function sheetBody(d, isNew) {
         </div>
         <textarea class="field" data-f="note" placeholder="做法要点、配菜、链接…">${esc(d.note)}</textarea>
         ${isNew
-          ? '<button class="btn primary wide" data-act="create">加进菜库</button>'
+          ? '<button class="btn primary wide" data-act="create">加进菜单</button>'
           : `<div class="editrow" style="margin-top:4px">
                <button class="btn sm" data-act="toggle">${d.on ? '暂时不抽' : '重新启用'}</button>
                <button class="btn sm danger" data-act="del">删掉这道菜</button>
@@ -552,22 +546,22 @@ $('sheet').addEventListener('click', async e => {
 
   const d = sheetDish();
   if (!d) return closeSheet();
-  if (!canEdit()) { toast('先在菜库页登录才能改'); return; }
+  if (!canEdit()) { toast('先在菜单页登录才能改'); return; }
 
   if (act === 'create') { await createDish(d); return; }
 
   if (act === 'fav')    { d.fav = !d.fav; await saveDish(d); refreshSheet(); renderLib(); }
-  if (act === 'toggle') { d.on = !d.on;  await saveDish(d); refreshSheet(); renderLib(); renderPoolLine(); }
+  if (act === 'toggle') { d.on = !d.on;  await saveDish(d); refreshSheet(); renderLib(); }
   if (act === 'rmimg')  {
     const old = d.img; d.img = '';
     if (await saveDish(d)) { deletePhoto(old); refreshSheet(); renderLib(); if (state.current?.id === d.id) renderBoard(); }
   }
   if (act === 'del') {
-    if (!confirm(`把「${d.n}」从菜库删掉？`)) return;
+    if (!confirm(`把「${d.n}」从菜单删掉？`)) return;
     if (!await removeDish(d)) return;
     state.dishes = state.dishes.filter(x => x.id !== d.id);
     if (state.current?.id === d.id) { state.current = null; $('btnEat').disabled = true; renderBoard(); }
-    closeSheet(); renderLib(); renderPoolLine(); toast('删掉了');
+    closeSheet(); renderLib(); toast('删掉了');
   }
 });
 
@@ -576,7 +570,7 @@ $('sheet').addEventListener('change', async e => {
   const d = sheetDish();
   if (!d) return;
   const isNew = !!$('sheet').dataset.new;
-  if (!canEdit()) { toast('先在菜库页登录才能改'); return; }
+  if (!canEdit()) { toast('先在菜单页登录才能改'); return; }
 
   /* 选图片 */
   if (el.dataset.act === 'pick' && el.files?.[0]) {
@@ -605,10 +599,10 @@ $('sheet').addEventListener('change', async e => {
   else if (f === 'n') { const v = el.value.trim(); if (v) d.n = v; else { el.value = d.n; return; } }
   else d[f] = typeof el.value === 'string' ? el.value.trim() : el.value;
 
-  if (isNew) return;                   // 新菜等「加进菜库」一起存
+  if (isNew) return;                   // 新菜等「加进菜单」一起存
   await saveDish(d);
   if (state.current?.id === d.id) renderBoard();
-  renderLib(); renderPoolLine();
+  renderLib();
   if (f === 'n') $('sheet').querySelector('.sheethead h2').textContent = d.n;
 });
 
@@ -623,7 +617,7 @@ async function createDish(d) {
   const nameEl = $('sheet').querySelector('[data-f="n"]');
   d.n = (nameEl?.value || '').trim();
   if (!d.n) { toast('先写个菜名'); nameEl?.focus(); return; }
-  if (state.dishes.some(x => x.n === d.n)) { toast('菜库里已经有了'); return; }
+  if (state.dishes.some(x => x.n === d.n)) { toast('菜单里已经有了'); return; }
 
   const btn = $('sheet').querySelector('[data-act="create"]');
   btn.disabled = true; btn.textContent = '正在存…';
@@ -633,10 +627,10 @@ async function createDish(d) {
 
   if (await saveDish(d)) {
     state.dishes.push(d);
-    closeSheet(); renderLib(); renderPoolLine();
+    closeSheet(); renderLib();
     toast(`加好了：${d.n}`);
   } else {
-    btn.disabled = false; btn.textContent = '加进菜库';
+    btn.disabled = false; btn.textContent = '加进菜单';
   }
 }
 
@@ -647,14 +641,14 @@ $('btnExport').onclick = () => {
   }, null, 1)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `菜库备份-${TODAY}.json`;
+  a.download = `菜单备份-${TODAY}.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
 
 $('btnSeed').onclick = async function () {
   if (!canEdit()) { toast('先登录'); return; }
-  if (!confirm('把 data/dishes.json 里的 97 道菜写进云端菜库？已经存在的同名菜不会重复添加。')) return;
+  if (!confirm('把 data/dishes.json 里的 97 道菜写进云端菜单？已经存在的同名菜不会重复添加。')) return;
   this.disabled = true;
   try {
     const r = await fetch('data/dishes.json', { cache: 'no-store' });
@@ -665,7 +659,7 @@ $('btnSeed').onclick = async function () {
     const { error } = await sb.from('dishes').upsert(add.map(toRow));
     if (error) throw error;
     await pull();
-    renderLib(); renderPoolLine(); renderLog();
+    renderLib(); renderLog();
     toast(`加了 ${add.length} 道`);
   } catch (err) { toast('没成功：' + (err.message || '')); }
   this.disabled = false;
@@ -698,7 +692,7 @@ if (!CONFIGURED) {
 
   pull().then(() => {
     state.ready = true;
-    renderBoard(); renderLog(); renderLib(); renderPoolLine();
+    renderBoard(); renderLog(); renderLib();
   }).catch(err => {
     state.ready = true;
     toast('连不上云端：' + (err.message || ''));
