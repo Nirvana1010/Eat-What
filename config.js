@@ -14,8 +14,8 @@
 // 千万别把 service_role / sb_secret_ 开头的 key 放这里。
 
 window.CONFIG = {
-  SUPABASE_URL: 'https://xxxxxxxxxxxx.supabase.co',
-  SUPABASE_KEY: 'sb_publishable_xxxxxxxx',   // 或者老的 anon key
+  SUPABASE_URL: 'https://ocabphocnlkcdzjfftwk.supabase.co',
+  SUPABASE_KEY: 'sb_publishable__8xXm-O_3g2T_ISnhbz5kA_Cpoed93z',   // 或者老的 anon key
 
   // 图片存储桶名字，跟 supabase.sql 里保持一致
   BUCKET: 'dish-photos'
