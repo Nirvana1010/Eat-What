@@ -1,0 +1,41 @@
+# 每 3 天戳一下 Supabase，免得免费档因为「一周无活动」被自动暂停。
+# 不需要配 secrets —— 直接从仓库里的 config.js 读地址和 key
+#（那个 key 本来就是公开的 publishable/anon key）。
+name: keepalive
+
+on:
+  schedule:
+    - cron: '17 6 */3 * *'   # 每 3 天一次，UTC 06:17
+  workflow_dispatch:          # 也可以在 Actions 页手动点一次
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 从 config.js 读取连接信息
+        id: cfg
+        run: |
+          URL=$(grep -oP "SUPABASE_URL:\s*'\K[^']+" config.js)
+          KEY=$(grep -oP "SUPABASE_(KEY|ANON_KEY):\s*'\K[^']+" config.js | head -1)
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "config.js 里没读到 SUPABASE_URL / SUPABASE_KEY"
+            exit 1
+          fi
+          echo "url=${URL%/}" >> "$GITHUB_OUTPUT"
+          echo "::add-mask::$KEY"
+          echo "key=$KEY" >> "$GITHUB_OUTPUT"
+
+      - name: 戳一下数据库
+        run: |
+          code=$(curl -s -o /tmp/out -w '%{http_code}' \
+            -H "apikey: ${{ steps.cfg.outputs.key }}" \
+            -H "Authorization: Bearer ${{ steps.cfg.outputs.key }}" \
+            "${{ steps.cfg.outputs.url }}/rest/v1/dishes?select=id&limit=1")
+          echo "HTTP $code"
+          if [ "$code" != "200" ]; then
+            echo "内容：$(cat /tmp/out)"
+            exit 1
+          fi
+          echo "菜单还活着"
