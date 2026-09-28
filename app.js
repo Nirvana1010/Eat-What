@@ -7,7 +7,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 /* ========== 词表（改这里就能改筛选项） ========== */
 const CATS    = ['猪肉','牛肉','羊肉','鸡肉','海鲜','鸡蛋','素菜','火锅','汤羹','主食','凉菜','早餐'];
-const METHODS = ['炒','炖','蒸','煮','焖','煎炸','凉拌'];
+const METHODS = ['炒','炖','蒸','煮','焖','煎炸','烤','凉拌'];
 
 
 /* ========== 分类线描图标 ========== */
@@ -98,6 +98,12 @@ const sb = CONFIGURED ? createClient(CFG.SUPABASE_URL.trim().replace(/\/$/, ''),
 
 /* ========== 状态 ========== */
 const state = { dishes: [], log: [], current: null, ready: false, session: null };
+
+/* 排序：分类顺序跟 CATS 一致，同一分类内按菜名拼音 */
+const catRank = d => { const i = CATS.indexOf(d.c); return i < 0 ? CATS.length : i; };
+const byCatThenPinyin = (x, y) =>
+  (catRank(x) - catRank(y)) || x.n.localeCompare(y.n, 'zh-Hans-CN');
+const sortDishes = () => state.dishes.sort(byCatThenPinyin);
 const canEdit = () => !!state.session;
 
 let F = { cat:'', method:'', maxMin:0, favOnly:false, avoid:7 };
@@ -146,7 +152,7 @@ async function pull() {
     sb.from('meals').select('*').order('eaten_on', { ascending: true }).limit(400)
   ]);
   if (a.error) throw a.error;
-  state.dishes = (a.data || []).map(fromRow).sort((x, y) => x.id < y.id ? -1 : 1);
+  state.dishes = (a.data || []).map(fromRow).sort(byCatThenPinyin);
   state.log = b.error ? [] : (b.data || []).map(r => ({ k: r.id, d: r.eaten_on, id: r.dish_id, n: r.dish_name }));
   writeCache();
 }
@@ -654,6 +660,7 @@ async function createDish(d) {
 
   if (await saveDish(d)) {
     state.dishes.push(d);
+    sortDishes();
     closeSheet(); renderLib();
     toast(`加好了：${d.n}`);
   } else {
