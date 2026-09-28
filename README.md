@@ -30,9 +30,13 @@ Supabase 控制台 → **Authentication → URL Configuration**：
 - `Site URL` 填 `https://<你的用户名>.github.io/<仓库名>/`
 - `Redirect URLs` 把上面这个地址也加进去；本地调试再加一条 `http://localhost:3000`
 
-登录方式用的是邮箱 magic link：在菜单页填邮箱 → 收到邮件 → 点链接就登录了，之后这台设备会一直保持登录。
+登录方式是**邮箱 + 密码**，不发任何邮件，所以不会撞上 Supabase 内置邮件服务「每小时 2 封」的限制。
 
-> 免费档自带的邮件发送有频率限制（每小时几封），自己用够了。想更稳可以在 Authentication → Providers 里接自己的 SMTP。
+在 Supabase 控制台建一个账号：**Authentication → Users → Add user → Create new user**，填邮箱和密码，**勾上 Auto Confirm User**，保存。
+
+之后在菜单页最下面点「登录后可以改菜单」，输入这组邮箱密码即可。浏览器会记住密码，换设备也只需要输一次。
+
+> 权限策略只看「有没有登录」（`auth.role() = 'authenticated'`），跟具体是哪个用户无关，所以账号可以随时删了重建，菜单数据不受影响。
 
 ## 三、部署到 GitHub Pages
 
@@ -138,3 +142,23 @@ alter table dishes drop column if exists taste;
 ```
 
 跑完再回页面点一次「导入初始 97 道菜」，会把新增的火锅、羊肉、鸡蛋那 13 道补进去（同名的不会重复）。
+
+## 别让 Supabase 把项目睡过去
+
+免费档的规则：项目 **1 周没有任何 API 请求就会被自动暂停**；暂停后 90 天内没恢复，就无法再从控制台恢复了。
+
+暂停本身是可逆的 —— 控制台点一下 Restore，数据一条不少。而且你每打开一次这个网页就是一次 API 请求，正常用根本碰不到这条线。会中招的是连着两周没开的情况（比如出门旅行）。
+
+仓库里的 `.github/workflows/keepalive.yml` 就是给这个兜底的：GitHub Actions 每 3 天自动请求一次数据库，把计时器顶住。
+
+**不用配任何东西**，它直接从 `config.js` 里读地址和 key（那个 key 本来就是公开的）。推上去之后：
+
+1. 仓库 → Actions 标签页 → 左边选 `keepalive` → 右边 `Run workflow` 手动跑一次，确认是绿的。
+2. 之后它自己每 3 天跑一次。
+
+两个注意点：
+
+- **GitHub 会停掉不活跃仓库的定时任务**。如果仓库连续 60 天没有任何提交，Actions 的 schedule 会被自动禁用，GitHub 会发邮件通知，点一下就能重新启用。
+- 万一还是被暂停了：Supabase 控制台里项目会带一个 Paused 标记，点 Restore 等几分钟就回来。**在这之前先去 Project Overview 把数据库备份和 Storage 文件下载一份**，免费档没有自动备份。
+
+另外菜单页底部的「导出备份」也建议偶尔点一下存一份 —— 那份 JSON 里菜和图片链接都有，是完全独立于 Supabase 的一道保险。

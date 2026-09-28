@@ -152,7 +152,7 @@ async function pull() {
 }
 
 async function saveDish(d) {
-  if (!canEdit()) { toast('先在菜单页登录才能改'); return false; }
+  if (!canEdit()) { toast('到菜单最下面登录后才能改'); return false; }
   const { error } = await sb.from('dishes').upsert(toRow(d));
   if (error) { toast('没存上：' + error.message); return false; }
   writeCache();
@@ -218,32 +218,59 @@ function deletePhoto(url) {
 }
 
 /* ========== 登录 ========== */
+let loginOpen = false;
+
 function renderAccount() {
   const box = $('account');
   if (!CONFIGURED) {
     box.innerHTML = '<div class="warn">config.js 里的 Supabase 地址或 key 还没填对，改不了也同步不了。看 README。</div>';
     return;
   }
-  box.innerHTML = state.session
-    ? `<div class="acct"><span>已登录 ${esc(state.session.user.email || '')}</span>
-         <button class="btn sm" id="btnOut">退出</button></div>`
-    : `<div class="acct"><span>只读模式，登录后才能改菜单</span></div>
-       <div class="row" style="margin-top:8px">
-         <input class="field" id="email" type="email" inputmode="email" placeholder="邮箱" autocomplete="email">
-         <button class="btn sm" id="btnIn">发登录链接</button>
-       </div>`;
 
-  if ($('btnOut')) $('btnOut').onclick = async () => { await sb.auth.signOut(); };
-  if ($('btnIn')) $('btnIn').onclick = async () => {
-    const email = $('email').value.trim();
-    if (!email) { toast('填个邮箱'); return; }
-    $('btnIn').disabled = true;
-    const { error } = await sb.auth.signInWithOtp({
-      email, options: { emailRedirectTo: location.origin + location.pathname }
-    });
-    $('btnIn').disabled = false;
-    toast(error ? '发不出去：' + error.message : '链接发到邮箱了，点开就登录');
-  };
+  if (state.session) {
+    box.innerHTML = `<div class="acct"><span>已登录 ${esc(state.session.user.email || '')}</span>
+      <button class="linkbtn" id="btnOut">退出</button></div>`;
+  } else if (!loginOpen) {
+    box.innerHTML = '<div class="acct"><button class="linkbtn" id="btnLoginOpen">登录后可以改菜单</button></div>';
+  } else {
+    box.innerHTML = `<div class="acct"><span>登录后可以改菜单</span>
+        <button class="linkbtn" id="btnLoginClose">收起</button></div>
+      <div class="row" style="margin-top:8px">
+        <input class="field" id="email" type="email" inputmode="email"
+               placeholder="邮箱" autocomplete="username">
+      </div>
+      <div class="row" style="margin-top:8px">
+        <input class="field" id="pw" type="password" placeholder="密码" autocomplete="current-password">
+        <button class="btn sm" id="btnIn">登录</button>
+      </div>`;
+  }
+
+  const out = $('btnOut');
+  if (out) out.onclick = () => sb.auth.signOut();
+
+  const open = $('btnLoginOpen');
+  if (open) open.onclick = () => { loginOpen = true; renderAccount(); $('email').focus(); };
+
+  const close = $('btnLoginClose');
+  if (close) close.onclick = () => { loginOpen = false; renderAccount(); };
+
+  const send = $('btnIn');
+  if (send) {
+    const submit = async () => {
+      const email = $('email').value.trim();
+      const password = $('pw').value;
+      if (!email || !password) { toast('邮箱和密码都要填'); return; }
+      send.disabled = true;
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      send.disabled = false;
+      if (error) { toast('登录失败：' + error.message); return; }
+      loginOpen = false;
+      toast('登录好了');
+    };
+    send.onclick = submit;
+    $('pw').addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+  }
+
   $('btnSeed').hidden = !canEdit();
 }
 
@@ -451,7 +478,7 @@ function renderLib() {
   if (!list.length) {
     box.innerHTML = state.dishes.length
       ? `<p class="empty"><span class="emptyic">${icon(libCat || '其他')}</span>这儿没有菜。<br>换个分类，或者用右上角「加菜」记一道。</p>`
-      : `<p class="empty"><span class="emptyic">${icon('主食')}</span>菜单还是空的。<br>登录后点下面的「导入初始 97 道菜」，或者直接「加菜」。</p>`;
+      : `<p class="empty"><span class="emptyic">${icon('主食')}</span>菜单还是空的。<br>登录后点下面的「导入菜单」，或者直接「加菜」。</p>`;
     return;
   }
   box.innerHTML = `<div class="grid">${list.map(tile).join('')}</div>`;
@@ -546,7 +573,7 @@ $('sheet').addEventListener('click', async e => {
 
   const d = sheetDish();
   if (!d) return closeSheet();
-  if (!canEdit()) { toast('先在菜单页登录才能改'); return; }
+  if (!canEdit()) { toast('到菜单最下面登录后才能改'); return; }
 
   if (act === 'create') { await createDish(d); return; }
 
@@ -570,7 +597,7 @@ $('sheet').addEventListener('change', async e => {
   const d = sheetDish();
   if (!d) return;
   const isNew = !!$('sheet').dataset.new;
-  if (!canEdit()) { toast('先在菜单页登录才能改'); return; }
+  if (!canEdit()) { toast('到菜单最下面登录后才能改'); return; }
 
   /* 选图片 */
   if (el.dataset.act === 'pick' && el.files?.[0]) {
@@ -608,7 +635,7 @@ $('sheet').addEventListener('change', async e => {
 
 /* ========== 加菜 ========== */
 $('btnAddToggle').onclick = () => {
-  if (!canEdit()) { toast('先登录才能加菜'); return; }
+  if (!canEdit()) { toast('到菜单最下面登录后才能加菜'); return; }
   openSheet(normalize({ id: newId(), n: '', c: libCat && CATS.includes(libCat) ? libCat : '猪肉' }), true);
   setTimeout(() => $('sheet').querySelector('[data-f="n"]')?.focus(), 60);
 };
