@@ -223,61 +223,71 @@ function deletePhoto(url) {
   if (p) sb.storage.from(BUCKET).remove([p]).catch(() => {});
 }
 
-/* ========== 登录 ========== */
-let loginOpen = false;
-
+/* ========== 登录 ==========
+   tab 栏右边只放一个很小的入口，具体表单在底部抽屉里填 */
 function renderAccount() {
   const box = $('account');
+  const seed = $('btnSeed');
+  if (seed) seed.hidden = !canEdit();
+
   if (!CONFIGURED) {
-    box.innerHTML = '<div class="warn">config.js 里的 Supabase 地址或 key 还没填对，改不了也同步不了。看 README。</div>';
+    box.innerHTML = '<button class="linkbtn" id="btnCfgWarn">未连接</button>';
+    $('btnCfgWarn').onclick = () => toast('config.js 里的 Supabase 地址或 key 还没填对');
     return;
   }
 
-  if (state.session) {
-    box.innerHTML = `<div class="acct"><span>已登录 ${esc(state.session.user.email || '')}</span>
-      <button class="linkbtn" id="btnOut">退出</button></div>`;
-  } else if (!loginOpen) {
-    box.innerHTML = '<div class="acct"><button class="linkbtn" id="btnLoginOpen">登录后可以改菜单</button></div>';
-  } else {
-    box.innerHTML = `<div class="acct"><span>登录后可以改菜单</span>
-        <button class="linkbtn" id="btnLoginClose">收起</button></div>
-      <div class="row" style="margin-top:8px">
-        <input class="field" id="email" type="email" inputmode="email"
-               placeholder="邮箱" autocomplete="username">
-      </div>
-      <div class="row" style="margin-top:8px">
-        <input class="field" id="pw" type="password" placeholder="密码" autocomplete="current-password">
-        <button class="btn sm" id="btnIn">登录</button>
-      </div>`;
-  }
+  box.innerHTML = state.session
+    ? '<button class="linkbtn" id="btnOut">退出</button>'
+    : '<button class="linkbtn" id="btnLoginOpen">登录</button>';
 
   const out = $('btnOut');
-  if (out) out.onclick = () => sb.auth.signOut();
+  if (out) out.onclick = async () => { await sb.auth.signOut(); toast('已退出'); };
 
   const open = $('btnLoginOpen');
-  if (open) open.onclick = () => { loginOpen = true; renderAccount(); $('email').focus(); };
+  if (open) open.onclick = openLoginSheet;
+}
 
-  const close = $('btnLoginClose');
-  if (close) close.onclick = () => { loginOpen = false; renderAccount(); };
+function openLoginSheet() {
+  const el = $('sheet');
+  el.dataset.mode = 'login';
+  el.dataset.id = '';
+  el.dataset.new = '';
+  el.innerHTML = `<div class="scrim" data-act="close"></div>
+    <div class="sheet" role="dialog" aria-modal="true">
+      <div class="grab"></div>
+      <div class="sheethead"><h2>登录</h2>
+        <button class="icon" data-act="close" aria-label="关闭">✕</button></div>
+      <div class="editor">
+        <p class="hint">只看菜单不用登录。加菜、改菜、传图才需要。</p>
+        <input class="field" id="email" type="email" inputmode="email"
+               placeholder="邮箱" autocomplete="username">
+        <input class="field" id="pw" type="password" placeholder="密码" autocomplete="current-password">
+        <button class="btn primary wide" id="btnIn">登录</button>
+      </div>
+    </div>`;
+  el.hidden = false;
+  document.body.style.overflow = 'hidden';
 
-  const send = $('btnIn');
-  if (send) {
-    const submit = async () => {
-      const email = $('email').value.trim();
-      const password = $('pw').value;
-      if (!email || !password) { toast('邮箱和密码都要填'); return; }
-      send.disabled = true;
-      const { error } = await sb.auth.signInWithPassword({ email, password });
-      send.disabled = false;
-      if (error) { toast('登录失败：' + error.message); return; }
-      loginOpen = false;
-      toast('登录好了');
-    };
-    send.onclick = submit;
-    $('pw').addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
-  }
+  el.querySelectorAll('[data-act="close"]').forEach(b => { b.onclick = closeSheet; });
 
-  $('btnSeed').hidden = !canEdit();
+  const submit = async () => {
+    const email = $('email').value.trim();
+    const password = $('pw').value;
+    if (!email || !password) { toast('邮箱和密码都要填'); return; }
+    const btn = $('btnIn');
+    btn.disabled = true; btn.textContent = '正在登录…';
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      btn.disabled = false; btn.textContent = '登录';
+      toast('登录失败：' + error.message);
+      return;
+    }
+    closeSheet();
+    toast('登录好了');
+  };
+  $('btnIn').onclick = submit;
+  $('pw').addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+  setTimeout(() => $('email')?.focus(), 60);
 }
 
 /* ========== 筛选 ========== */
@@ -546,6 +556,7 @@ function openSheet(d, isNew = false) {
   draft = isNew ? d : null;
   pendingFile = null;
   const el = $('sheet');
+  el.dataset.mode = 'dish';
   el.innerHTML = sheetBody(d, isNew);
   el.hidden = false;
   el.dataset.id = d.id;
@@ -554,6 +565,7 @@ function openSheet(d, isNew = false) {
 }
 
 function closeSheet() {
+  $('sheet').dataset.mode = '';
   $('sheet').hidden = true;
   $('sheet').innerHTML = '';
   draft = null; pendingFile = null;
@@ -572,6 +584,7 @@ function refreshSheet() {
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('sheet').hidden) closeSheet(); });
 
 $('sheet').addEventListener('click', async e => {
+  if ($('sheet').dataset.mode === 'login') return;   // 登录抽屉自己绑了处理器
   const b = e.target.closest('[data-act]');
   if (!b || b.dataset.act === 'pick') return;
   const act = b.dataset.act;
@@ -599,6 +612,7 @@ $('sheet').addEventListener('click', async e => {
 });
 
 $('sheet').addEventListener('change', async e => {
+  if ($('sheet').dataset.mode === 'login') return;
   const el = e.target;
   const d = sheetDish();
   if (!d) return;

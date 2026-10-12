@@ -44,14 +44,20 @@
 }
 
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;overflow-x:clip}  /* 防止任何元素把手机的布局视口撑宽 */
+html{
+  /* iOS Safari 会自作主张放大正文字号，必须显式关掉 */
+  -webkit-text-size-adjust:100%; text-size-adjust:100%;
+  overflow-x:clip;
+}
+body{margin:0;padding:0;overflow-x:clip}
+html{margin:0;padding:0}
 body{
   background:var(--bg); color:var(--ink);
   font-family:var(--sans); font-size:16px; line-height:1.65;   /* 想整体调大调小，改这一行 */
   -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
   padding:0 16px calc(56px + env(safe-area-inset-bottom));
 }
-.wrap{max-width:640px;margin:0 auto;width:100%}
+.wrap{max-width:640px;margin:0 auto;width:100%;overflow-x:clip}
 button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer}
 :focus-visible{outline:2px solid var(--accent-strong);outline-offset:2px;border-radius:3px}
 
@@ -60,7 +66,9 @@ header{padding:28px 0 16px;display:flex;align-items:baseline;justify-content:spa
 h1{font-family:var(--display);font-weight:var(--display-weight);font-size:1.6rem;margin:0;letter-spacing:.18em}
 .date{font-size:.82rem;color:var(--dim);letter-spacing:.08em;white-space:nowrap}
 
-.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:20px}
+.tabbar{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+  border-bottom:1px solid var(--line);margin-bottom:20px}
+.tabs{display:flex;gap:2px}
 .tab{background:none;border:0;padding:10px 16px;color:var(--dim);letter-spacing:.14em;font-size:.97rem;
   border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s}
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent-strong)}
@@ -226,9 +234,8 @@ textarea.field{resize:vertical;min-height:62px;line-height:1.6}
 .icon.on{color:var(--accent-strong)}
 
 /* ---------- 账号 / 状态 ---------- */
-.account{margin-top:16px}
-.acct{display:flex;align-items:center;justify-content:space-between;gap:10px;
-  font-size:.82rem;color:var(--dim);letter-spacing:.06em}
+.account{flex:0 0 auto;display:flex;align-items:flex-end}
+.account .linkbtn{padding:10px 2px 11px}   /* 跟 tab 一样高，手指点得到 */
 .linkbtn{background:none;border:0;padding:0;color:var(--dim);font-size:.82rem;
   letter-spacing:.06em;text-decoration:underline;text-decoration-style:dotted;
   text-underline-offset:3px}
