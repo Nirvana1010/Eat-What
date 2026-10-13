@@ -14,7 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
 <!-- 方案 B：霞鹜文楷屏幕阅读版（jsDelivr，按需分包）。定下来后把用不上的这行删掉 -->
 <link href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-web/style.css" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=19">
+<link rel="stylesheet" href="style.css?v=20">
 </head>
 <body>
 <div class="wrap">
@@ -22,6 +22,11 @@
     <h1>今天吃什么</h1>
     <div class="date" id="today"></div>
   </header>
+
+  <div class="modes" role="group" aria-label="在家吃还是出去吃">
+    <button class="mode" data-mode="home" aria-pressed="true">在家吃</button>
+    <button class="mode" data-mode="out" aria-pressed="false">出去吃</button>
+  </div>
 
   <div class="tabbar">
     <div class="tabs" role="tablist">
@@ -61,13 +66,15 @@
       <p class="dish placeholder">正在读菜单…</p>
     </div>
 
+    <div class="navbox" id="navBox" hidden></div>
+
     <div class="row">
       <button class="btn" id="btnDraw">抽一道</button>
       <button class="btn primary" id="btnEat" disabled>就吃它</button>
     </div>
 
     <div class="recent">
-      <p class="secthead">最近吃过</p>
+      <p class="secthead" id="logHead">最近吃过</p>
       <div id="logList"></div>
     </div>
   </section>
@@ -77,7 +84,7 @@
 <div id="sheet" hidden></div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="config.js?v=19"></script>
-<script type="module" src="app.js?v=19"></script>
+<script src="config.js?v=20"></script>
+<script type="module" src="app.js?v=20"></script>
 </body>
 </html>
